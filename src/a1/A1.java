@@ -90,7 +90,7 @@ public class A1 {
             System.out.print("  |   TF : " + toTF);
         }
         AtomicLong the = map.get("the");
-        if(to != null){
+        if(the != null){
             Double theTF = the.doubleValue() / map.size();
             System.out.print("\nthe : " + the.longValue());
             System.out.print("  |   TF : " + theTF);
@@ -121,11 +121,30 @@ public class A1 {
         return urlList;
     }
     
+    public static void checkSym(List listOfMaps){
+        int pageNumber = 0;
+        System.out.println(listOfMaps.size());
+        while (pageNumber < listOfMaps.size()){
+            Map<String,AtomicLong> tempMap = new ConcurrentHashMap<>();
+            tempMap = (Map<String, AtomicLong>) listOfMaps.get(pageNumber);
+        
+            AtomicLong the = tempMap.get("the");
+            
+            if(the != null){
+                Double theTF = the.doubleValue() / tempMap.size();
+                System.out.print("\nthe : " + the.longValue());
+                System.out.print("  |   TF : " + theTF);
+            }
+            pageNumber++;
+        }
+        
+    }
+    
+    
     
     public static void main(String[] args) throws Exception {
         int pageNumber = 0;
         List<String> urlList = readFile("urls.txt");
-        
         List<Map<String,AtomicLong>> listOfMaps = new ArrayList<>();
         
         while (pageNumber < urlList.size()){
@@ -138,7 +157,7 @@ public class A1 {
             
             pageNumber++;
         }
-        
+        checkSym(listOfMaps);
         
         //ConcurrentHashMap<String, AtomicLong> map = urlToMap("https://en.wikipedia.org/wiki/Java_ConcurrentMap");
         //ConcurrentHashMap<String, AtomicLong> map2 = urlToMap("https://en.wikipedia.org/wiki/Doug_Lea");
