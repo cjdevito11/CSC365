@@ -95,6 +95,14 @@ public class A1 {
             System.out.print("\nthe : " + the.longValue());
             System.out.print("  |   TF : " + theTF);
         }
+        AtomicLong so = map.get("so");
+        if(so != null){
+            Double soTF = the.doubleValue() / map.size();
+            System.out.print("\nso : " + so.longValue());
+            System.out.print("  |   TF : " + soTF);
+        } else {
+            System.out.println("\nno so's");
+        }
         System.out.println("\n# words in doc): " + map.size());
     }
     
@@ -123,20 +131,29 @@ public class A1 {
     
     public static void checkSym(List listOfMaps){
         int pageNumber = 0;
+        int contains = 0;
+        Double soTF = 0.0;
         System.out.println(listOfMaps.size());
         while (pageNumber < listOfMaps.size()){
             Map<String,AtomicLong> tempMap = new ConcurrentHashMap<>();
             tempMap = (Map<String, AtomicLong>) listOfMaps.get(pageNumber);
         
-            AtomicLong the = tempMap.get("the");
+            AtomicLong so = tempMap.get("so");
             
-            if(the != null){
-                Double theTF = the.doubleValue() / tempMap.size();
-                System.out.print("\nthe : " + the.longValue());
-                System.out.print("  |   TF : " + theTF);
-            }
+            if(so != null){
+                soTF = so.doubleValue() / tempMap.size();
+                System.out.print("\nso : " + so.longValue());
+                System.out.print("  |  TF : " + soTF);
+                contains++;
+               }
             pageNumber++;
         }
+         System.out.println("\n" + contains + " page(s) contain so");
+        Double IDF = Math.log(listOfMaps.size() / contains);
+        System.out.println("  | IDF : " + IDF);
+        
+        Double tfidf = soTF * IDF;
+        System.out.println("  | tfidf : " + tfidf);
         
     }
     

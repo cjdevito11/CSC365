@@ -1,0 +1,4 @@
+https://en.wikipedia.org/wiki/Doug_Lea
+https://en.wikipedia.org/wiki/Java_ConcurrentMap
+https://en.wikipedia.org/wiki/Java_(disambiguation)
+http://gee.cs.oswego.edu/dl/jsr166/dist/docs/java.base/java/util/concurrent/atomic/AtomicLong.html
