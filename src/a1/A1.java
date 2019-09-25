@@ -38,7 +38,7 @@ public class A1 {
     }
 
     
-    /**
+    /**                urlToMap Function
      * @param url
      * @return Map
      * @throws java.io.IOException =
@@ -56,7 +56,7 @@ public class A1 {
             AtomicLong l = map.get(splitInput[splitCounter]);
             if(l == null){
                 l = new AtomicLong(1);
-                l = map.putIfAbsent(splitInput[splitCounter], l);
+                l = map.putIfAbsent(splitInput[splitCounter].toLowerCase(), l);
                 if(l != null){
                     l.incrementAndGet();
                 }
@@ -68,7 +68,7 @@ public class A1 {
         
         // Output
         System.out.println("\n\n"+title);
-        output(map);
+        
         //
         return map;
     }
@@ -135,7 +135,7 @@ public class A1 {
         Double soTF = 0.0;
         System.out.println(listOfMaps.size());
         while (pageNumber < listOfMaps.size()){
-            Map<String,AtomicLong> tempMap = new ConcurrentHashMap<>();
+            Map<String,AtomicLong> tempMap;
             tempMap = (Map<String, AtomicLong>) listOfMaps.get(pageNumber);
         
             AtomicLong so = tempMap.get("so");
@@ -148,11 +148,51 @@ public class A1 {
                }
             pageNumber++;
         }
-         System.out.println("\n" + contains + " page(s) contain so");
-        Double IDF = Math.log(listOfMaps.size() / contains);
-        System.out.println("  | IDF : " + IDF);
+        System.out.println("\n" + contains + " page(s) contain so");
         
+        Double IDF = Math.log(listOfMaps.size() / contains);
         Double tfidf = soTF * IDF;
+        
+        System.out.println("  | IDF : " + IDF);
+        System.out.println("  | tfidf : " + tfidf);
+        
+    }
+    
+        public static void tfidfOfWord(List listOfMaps,String wordIn){
+        int pageNumber = 0;
+        int contains = 0;
+        Double wordTF = 0.0;
+        Double IDF = 0.0;
+        Double tfidf = 0.0;
+        
+        System.out.println(listOfMaps.size());
+        while (pageNumber < listOfMaps.size()){
+            Map<String,AtomicLong> tempMap;
+            tempMap = (Map<String, AtomicLong>) listOfMaps.get(pageNumber);
+        
+            AtomicLong word = tempMap.get(wordIn);
+            
+            if(word != null){
+                wordTF = word.doubleValue() / tempMap.size();
+                System.out.print("\nthe : " + word.longValue());
+                System.out.print("  |  TF : " + wordTF);
+                contains++;
+               }
+            pageNumber++;
+        }
+        System.out.println("\n" + contains + " page(s) contains " + wordIn);
+        
+        if (contains > 0) {
+            IDF = Math.log(listOfMaps.size() / contains);
+        } else {
+            IDF = 0.0;
+        }
+        tfidf = wordTF * IDF;
+        
+        System.out.println(listOfMaps.size());
+        System.out.println(contains);
+        
+        System.out.println("  | IDF : " + IDF);
         System.out.println("  | tfidf : " + tfidf);
         
     }
@@ -168,13 +208,17 @@ public class A1 {
             System.out.println(urlList.get(pageNumber));
             
             ConcurrentHashMap<String, AtomicLong> tempMap = urlToMap(urlList.get(pageNumber));
+            
+            output(tempMap);
+            
             listOfMaps.add(tempMap);
             
        //    ConcurrentHashMap<Integer, words> map = urlToMap(urlList.get(pageNumber),pageNumber);
             
             pageNumber++;
         }
-        checkSym(listOfMaps);
+        //checkSym(listOfMaps);
+        tfidfOfWord(listOfMaps,"Doug".toLowerCase());
         
         //ConcurrentHashMap<String, AtomicLong> map = urlToMap("https://en.wikipedia.org/wiki/Java_ConcurrentMap");
         //ConcurrentHashMap<String, AtomicLong> map2 = urlToMap("https://en.wikipedia.org/wiki/Doug_Lea");
