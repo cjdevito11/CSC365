@@ -10,9 +10,14 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import static jdk.nashorn.internal.objects.Global.print;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 /**
  *
@@ -23,9 +28,7 @@ class words {
     AtomicLong number;
 }
 
-
 public class A1 {
-
     //ConcurrentHashMap<String, AtomicLong> map = new ConcurrentHashMap<>();  // Initialize with (Int) to start w/ default size
     
     public static void checkTF(Map<String, AtomicLong> map){
@@ -36,6 +39,84 @@ public class A1 {
             System.out.println("aTF(a term frequency) : " + aTF);
         }
     }
+    
+    public static boolean checkForURL(String url, String file) throws FileNotFoundException{
+        int counter = 0;
+        File realFile = new File(file);
+        Scanner scanner = new Scanner(realFile);
+
+        //now read the file line by line...
+        int lineNum = 0;
+        System.out.println("URL LOOKING FOR : " + url);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            lineNum++;
+            System.out.println("line testing : "+ line + "   |    line.compareTo(url) : " + line.compareTo(url));
+            if(line.compareTo(url) == 0) { 
+                counter++;
+            }
+        }
+        if (counter == 0){ 
+            System.out.println("url DOESNT exist");
+            return false;
+        } else {
+            System.out.println("url DOES exist");
+            return true;
+        }
+    }
+    
+    // ADD STRING
+    public static void addToFile(String file, String url) throws IOException {
+    BufferedWriter writer = new BufferedWriter(
+                                new FileWriter(file, true)  //Set true for append mode
+                            ); 
+    writer.newLine();   //Add new line
+    writer.write(url);
+    writer.close();
+}
+    
+    // ADD LIST
+    public static void addListToFile(String file, List urlList) throws IOException {
+        int counter = 0;
+        int addCounter = 0; 
+        String tempURL;
+        List <String> addList = new ArrayList();
+ 
+                                
+        while (counter < urlList.size()){
+            tempURL = urlList.get(counter).toString();
+            if (checkForURL(tempURL,file) == false){
+                System.out.println("Add to list");
+                addList.add(tempURL);
+                addCounter++;
+            } else { System.out.println("\n\n\nAlready In"); }
+           
+            counter++;
+        }
+        
+        if (addCounter > 0){
+            addCounter--;    // TO MOVE DOWN ONE FOR SIZE OF ARRAY 0-X not 1-X
+            BufferedWriter writer = new BufferedWriter( //Set true for append mode
+                                        new FileWriter(file, true));  
+            while (addCounter > 0){
+
+                writer.newLine();   //Add new line
+                writer.write(addList.get(addCounter));
+
+                addCounter--;
+            }
+            writer.close();
+        }
+        
+    }
+    
+    private static String trim(String s, int width) {
+        if (s.length() > width)
+            return s.substring(0, width-1) + ".";
+        else
+            return s;
+    }
+
 
     
     /**                urlToMap Function
@@ -44,14 +125,57 @@ public class A1 {
      * @throws java.io.IOException =
      */
     
-    public static ConcurrentHashMap<String, AtomicLong> urlToMap(String url) throws IOException{
+    public static ConcurrentHashMap<String, AtomicLong> urlToMap(String url,String urlFile) throws IOException{
         ConcurrentHashMap<String, AtomicLong> map = new ConcurrentHashMap<>();
-        int splitCounter = 0;        
+        int splitCounter = 0;  
+        int loopCounter = 0;
+        String hrefRegex = 
+                "<a[^>]*>(.*?)</a>";
+        Pattern pattern = Pattern.compile(hrefRegex);
+        
+        
         Document doc = Jsoup.connect(url).get();
+        File input = new File(url);
+
+        //Document doc = Jsoup.parse(input, "UTF-8", "http://example.com/");
+
+        
         String title = doc.title();
         String body = doc.body().text();
         String[] splitInput = body.split("\\s+");
+        
+        
+        
+        Elements links = doc.select("a[href]");
+        List linksList = new ArrayList();
+        
+        //System.out.println(links.size());
+        for (Element link : links) {
+           //System.out.println("link.attr(\"abs:href\") : " + link.attr("abs:href"));
+           linksList.add(link.attr("abs:href"));
+        }
+        
+       // addListToFile(urlFile, linksList);
+                
     
+      /* 
+        while (loopCounter < links.size()){
+           
+            Matcher m = pattern.matcher(links.get(loopCounter).toString());
+            System.out.println(links.get(loopCounter));
+            //System.out.println(m.find());
+            while(m.find()){
+               // System.out.println(m);
+               // System.out.println("m.group(0) " + m.group(0));
+                //System.out.println("links : " + m.group(1));
+            }
+            loopCounter++;
+        }
+        */
+       // System.out.println("links  :  " + links);
+        
+        
+        
         while(splitCounter < splitInput.length){
             AtomicLong l = map.get(splitInput[splitCounter]);
             if(l == null){
@@ -73,7 +197,20 @@ public class A1 {
         return map;
     }
     
+    
+    
+    
+    public static void getLinks(Map<String, AtomicLong> map){
+        
+        
+    }
 
+    
+    
+    
+    
+    
+    
     
     public static void output(Map<String, AtomicLong> map){
         AtomicLong a = map.get("a");
@@ -188,26 +325,30 @@ public class A1 {
             IDF = 0.0;
         }
         tfidf = wordTF * IDF;
-        
+        /*
         System.out.println(listOfMaps.size());
         System.out.println(contains);
         
         System.out.println("  | IDF : " + IDF);
         System.out.println("  | tfidf : " + tfidf);
-        
+        */
     }
     
     
     
-    public static void main(String[] args) throws Exception {
+    public static void main(String input) throws Exception {
+        String urlFile = "url.txt";
         int pageNumber = 0;
-        List<String> urlList = readFile("urls.txt");
+        GUI.setTextField("blah");
+       
+       
+        List<String> urlList = readFile(urlFile);
         List<Map<String,AtomicLong>> listOfMaps = new ArrayList<>();
         
         while (pageNumber < urlList.size()){
             System.out.println(urlList.get(pageNumber));
             
-            ConcurrentHashMap<String, AtomicLong> tempMap = urlToMap(urlList.get(pageNumber));
+            ConcurrentHashMap<String, AtomicLong> tempMap = urlToMap(urlList.get(pageNumber),urlFile);
             
             output(tempMap);
             
@@ -220,15 +361,15 @@ public class A1 {
         //checkSym(listOfMaps);
         tfidfOfWord(listOfMaps,"Doug".toLowerCase());
         
+        // addToFile(urlFile, "test");
+        
         //ConcurrentHashMap<String, AtomicLong> map = urlToMap("https://en.wikipedia.org/wiki/Java_ConcurrentMap");
         //ConcurrentHashMap<String, AtomicLong> map2 = urlToMap("https://en.wikipedia.org/wiki/Doug_Lea");
       
         
         
-        
     }
 }
-
 
 
 
