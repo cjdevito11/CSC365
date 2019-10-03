@@ -1,0 +1,10 @@
+http://www.tfidf.com/
+https://github.com/gearmonkey/tfidf-python
+https://en.wikipedia.org/wiki/Doug_Lea
+https://en.wikipedia.org/wiki/Java
+https://en.wikipedia.org/wiki/Java_ConcurrentMap
+https://en.wikipedia.org/wiki/Java_(disambiguation)
+https://en.wikipedia.org/wiki/Computer_programming
+https://en.wikipedia.org/wiki/Wikipedia:About
+http://gee.cs.oswego.edu/dl/csc365/a1.html
+http://gee.cs.oswego.edu/dl/jsr166/dist/docs/java.base/java/util/concurrent/atomic/AtomicLong.html
