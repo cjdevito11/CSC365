@@ -51,7 +51,7 @@ public class A1 {
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             lineNum++;
-            System.out.println("line testing : "+ line + "   |    line.compareTo(url) : " + line.compareTo(url));
+            System.out.println("line testing : " + line + "   |    line.compareTo(url) : " + line.compareTo(url));
             if(line.compareTo(url) == 0) { 
                 counter++;
             }
@@ -196,22 +196,7 @@ public class A1 {
         //
         return map;
     }
-    
-    
-    
-    
-    public static void getLinks(Map<String, AtomicLong> map){
-        
-        
-    }
-
-    
-    
-    
-    
-    
-    
-    
+ 
     public static void output(Map<String, AtomicLong> map){
         AtomicLong a = map.get("a");
         if(a != null){
@@ -243,6 +228,31 @@ public class A1 {
         System.out.println("\n# words in doc): " + map.size());
     }
     
+       
+    public static ArrayList<String> readWordsToList(String filename) throws IOException{
+        
+        ArrayList<String> words = new ArrayList<>();
+ 
+        try (FileReader file = new FileReader(filename)) {
+            StringBuffer sb = new StringBuffer();
+            while (file.ready()) {
+                char c = (char) file.read();
+                if (c == '\n') {
+                    words.add(sb.toString());      // Add string to list @ \n
+                    sb = new StringBuffer();
+                } else {
+                    sb.append(c);           //Add char to String
+                }
+            }
+            if (sb.length() > 0) {
+                words.add(sb.toString());
+            }
+        }
+        return words;
+    }
+    
+    
+    
     public static ArrayList<String> readFile(String filename) throws IOException{
         
         ArrayList<String> urlList = new ArrayList<>();
@@ -270,6 +280,7 @@ public class A1 {
         int pageNumber = 0;
         int contains = 0;
         Double soTF = 0.0;
+        Double IDF = 0.0;
         System.out.println(listOfMaps.size());
         while (pageNumber < listOfMaps.size()){
             Map<String,AtomicLong> tempMap;
@@ -286,12 +297,17 @@ public class A1 {
             pageNumber++;
         }
         System.out.println("\n" + contains + " page(s) contain so");
+        /*
+        if (contains == 0) {
+            IDF = Math.log(listOfMaps.size());
+        }
         
-        Double IDF = Math.log(listOfMaps.size() / contains);
+        IDF = Math.log(listOfMaps.size() / contains);
         Double tfidf = soTF * IDF;
         
         System.out.println("  | IDF : " + IDF);
         System.out.println("  | tfidf : " + tfidf);
+        */
         
     }
     
@@ -311,7 +327,8 @@ public class A1 {
             
             if(word != null){
                 wordTF = word.doubleValue() / tempMap.size();
-                System.out.print("\nthe : " + word.longValue());
+                System.out.print("\n" + wordIn + " : " + word.longValue());
+               
                 System.out.print("  |  TF : " + wordTF);
                 contains++;
                }
@@ -325,21 +342,86 @@ public class A1 {
             IDF = 0.0;
         }
         tfidf = wordTF * IDF;
-        /*
+        
         System.out.println(listOfMaps.size());
         System.out.println(contains);
         
         System.out.println("  | IDF : " + IDF);
         System.out.println("  | tfidf : " + tfidf);
-        */
+        
     }
+    public static Double tfOfWord(ConcurrentHashMap<String, AtomicLong> map,String wordIn){
+        Double wordTF = 0.0;
+        AtomicLong wordCount = map.get(wordIn);
+
+        if(wordCount != null){
+            wordTF = wordCount.doubleValue() / map.size();
+            System.out.print("\nthe : " + wordCount.longValue());
+            System.out.print("  |  TF : " + wordTF);
+        }
+        return wordTF;
+    }
+      
     
-    
+    public static int compareMaps(ConcurrentHashMap<String,AtomicLong> map1,
+                                ConcurrentHashMap<String,AtomicLong> map2,
+                                ArrayList<String> words){
+        
+        int counter = 0;
+        int similarity = 0;
+        Double map1TF = 0.0;
+        Double map2TF = 0.0;
+        
+        AtomicLong wordCountMap1;
+        AtomicLong wordCountMap2;
+        
+        //ConcurrentHashMap<String, Double> compareMap = new ConcurrentHashMap();
+        
+        while (counter < words.size()){
+            
+            wordCountMap1 = map1.get(words.get(counter));
+            if(wordCountMap1 != null){
+                map1TF = wordCountMap1.doubleValue() / map1.size();
+                System.out.print("\n" + words.get(counter) + " in map1 : " + wordCountMap1.longValue());
+                System.out.print("  |   TF : " + map1TF);
+                
+            }
+            
+            wordCountMap2 = map2.get(words.get(counter));
+            if(wordCountMap2 != null){
+                map2TF = wordCountMap2.doubleValue() / map2.size();
+                System.out.print("\n" + words.get(counter) + " in map2 : " + wordCountMap2.longValue());
+                System.out.print("  |   TF : " + map2TF);
+            }
+            
+            if ((map1TF > (map2TF - .005)) && (map1TF < (map2TF + .005))){
+                similarity++;           // INCREMENT IF WITHIN RANGE
+            }
+            counter++;
+            //compareMap.putIfAbsent(words.get(counter).toLowerCase(), map1TF);
+        }
+        return similarity;
+    }
+      
     
     public static void main(String input) throws Exception {
-        String urlFile = "url.txt";
+        
         int pageNumber = 0;
-        GUI.setTextField("blah");
+        int closest = 0;
+        List<Integer> similarity = new ArrayList<Integer>();
+        String inputUrl = GUI.getURL();
+        String urlFile = "url.txt";
+        String wordsFile = "words.txt";
+        String mostSimilarLink = "IDK YET SORRY";
+        
+        ArrayList<String> wordList = readWordsToList(wordsFile);
+        
+        ConcurrentHashMap<String, AtomicLong> inputMap;
+        ConcurrentHashMap<String, AtomicLong> tempMap;
+         
+        inputMap = urlToMap(inputUrl,null);
+        
+        //System.out.println(inputUrl);
        
        
         List<String> urlList = readFile(urlFile);
@@ -348,9 +430,16 @@ public class A1 {
         while (pageNumber < urlList.size()){
             System.out.println(urlList.get(pageNumber));
             
-            ConcurrentHashMap<String, AtomicLong> tempMap = urlToMap(urlList.get(pageNumber),urlFile);
+            tempMap = urlToMap(urlList.get(pageNumber),urlFile);
+            similarity.add(pageNumber, compareMaps(inputMap,tempMap,wordList));
+            System.out.println("\n\nSimilarity between inputMap & map @ page # : " + pageNumber + 
+                    " = " + similarity.get(pageNumber));
+           // output(tempMap);
             
-            output(tempMap);
+            if (Collections.max(similarity) > similarity.get(closest)){
+                closest = pageNumber;
+            }
+       
             
             listOfMaps.add(tempMap);
             
@@ -358,11 +447,21 @@ public class A1 {
             
             pageNumber++;
         }
-        //checkSym(listOfMaps);
-        tfidfOfWord(listOfMaps,"Doug".toLowerCase());
         
+        System.out.println("Page # :" + closest);
+        System.out.println(" = " + Collections.max(similarity));
+        
+       // tfidfOfWord(listOfMaps,"so".toLowerCase());       
+        
+        
+        
+        
+        //similar / total number of words  * tf5
+        
+        
+        GUI.setTextField(urlList.get(closest));
         // addToFile(urlFile, "test");
-        
+        //checkSym(listOfMaps);  // Improved with tfidfOfWord
         //ConcurrentHashMap<String, AtomicLong> map = urlToMap("https://en.wikipedia.org/wiki/Java_ConcurrentMap");
         //ConcurrentHashMap<String, AtomicLong> map2 = urlToMap("https://en.wikipedia.org/wiki/Doug_Lea");
       
