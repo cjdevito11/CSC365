@@ -53,7 +53,7 @@ public class GUI extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("GUI");
 
-        urlField.setText("http://www.example.com");
+        urlField.setText("http://www.google.com");
         urlField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 urlFieldActionPerformed(evt);
