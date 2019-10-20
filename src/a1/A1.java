@@ -134,6 +134,11 @@ public class A1 {
      * @return Map
      * @throws java.io.IOException =
      */
+    //
+    //public static File urlToFile() {
+        
+    //}
+    
     
     public static CustomHashMap urlToMap(String url,String urlFile) throws IOException{
         CustomHashMap map = new CustomHashMap<>();
@@ -402,16 +407,16 @@ public class A1 {
             wordCountMap1 = map1.get(words.get(counter));
            // if(wordCountMap1 != null){
             map1TF = wordCountMap1.doubleValue() / map1.getSizeOfMap();
-           //     System.out.print("\n" + words.get(counter) + " in map1 : " + wordCountMap1.longValue());
-            //    System.out.print("  |   TF : " + map1TF);
+                System.out.print("\n" + words.get(counter) + " in map1 : " + wordCountMap1.longValue());
+                System.out.print("  |   TF : " + map1TF);
                 
            // }
             
             wordCountMap2 = map2.get(words.get(counter));
            // if(wordCountMap2 != null){
             map2TF = wordCountMap2.doubleValue() / map2.getSizeOfMap();
-            //    System.out.print("\n" + words.get(counter) + " in map2 : " + wordCountMap2.longValue());
-            //    System.out.print("  |   TF : " + map2TF);
+                System.out.print("\n" + words.get(counter) + " in map2 : " + wordCountMap2.longValue());
+                System.out.print("  |   TF : " + map2TF);
            // }
             if (map1TF != 0 && map2TF != 0){
            
@@ -428,7 +433,6 @@ public class A1 {
                         if ((map1TF > (map2TF - .0005)) && (map1TF < (map2TF + .0005))){
                             similarity++;           // INCREMENT IF WITHIN RANGE
                         }     
-
                }
            }
               
@@ -697,6 +701,4 @@ TRIED TO MAKE OWN CLASS TO KEEP TRACK OF PAGE NUMBERS
         //
         return map;
     }
-
-
 */
