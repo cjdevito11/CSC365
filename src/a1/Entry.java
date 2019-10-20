@@ -54,10 +54,13 @@ public class Entry {
     
     public Entry getNext() { return next; }
     
+    public void setKey(int tempKey){ key  = tempKey; }
+    
     public void setCount(Integer tempCount) { count = tempCount; }
     
     public void addOne() { count++; }
     
     public void setNext(Entry tempNext){ next = tempNext; }
+    
     
 }
