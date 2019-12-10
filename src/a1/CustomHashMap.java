@@ -5,6 +5,8 @@
  */
 package a1;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author CJ
@@ -15,9 +17,12 @@ public class CustomHashMap<String,Integer> {
     private final static int TABLE_SIZE = 16;
     private static int NEW_TABLE_SIZE = TABLE_SIZE;
     private static int sizeCounter = 0;
+    private int wordsSize = 100;
     
-    
+    String url;
+    public String category;
     Entry[] table;
+    ArrayList<String> words = new ArrayList();
     
     CustomHashMap() {
         sizeCounter = 0;
@@ -26,6 +31,37 @@ public class CustomHashMap<String,Integer> {
         for (int i = 0; i < TABLE_SIZE; i++){
             table[i] = null;
         }
+         
+    }
+    CustomHashMap(String iUrl) {
+        this.url = iUrl;
+        sizeCounter = 0;
+        NEW_TABLE_SIZE = TABLE_SIZE;
+        table = new Entry[TABLE_SIZE];
+        for (int i = 0; i < TABLE_SIZE; i++){
+            table[i] = null;
+        }
+         
+    }
+        CustomHashMap(String iUrl, String cat) {
+        this.url = iUrl;
+        this.category = cat;
+        sizeCounter = 0;
+        NEW_TABLE_SIZE = TABLE_SIZE;
+        table = new Entry[TABLE_SIZE];
+        for (int i = 0; i < TABLE_SIZE; i++){
+            table[i] = null;
+        }
+         
+    }
+    
+        
+    public String getCategory(){
+        return category;
+    }
+    
+    public String getUrl(){
+        return url;
     }
     
     public int getSizeOfMap(){
@@ -107,6 +143,10 @@ public class CustomHashMap<String,Integer> {
         if (table[hash] == null){
             if (count == 0) { count = 1; }
              table[hash] = new Entry(hashKey, count);
+             
+             System.out.println("\n\n\n\n\n words.length: " + words.size());
+             words.add(key);
+             
              sizeCounter++;
              
         } else {
@@ -118,6 +158,9 @@ public class CustomHashMap<String,Integer> {
                 entry.addOne();
             } else {
                 entry.setNext(new Entry(hashKey, count));
+                
+                words.add(key);
+                
                 sizeCounter++;
             }
         }
