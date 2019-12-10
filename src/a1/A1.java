@@ -5,6 +5,7 @@
  */
 package a1;
 
+import static a1.A2.corpus;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -23,13 +24,82 @@ import org.jsoup.select.Elements;
  *
  * @author CJ
  */
-class words {
-    String word;
-    Integer number;
-}
 
 public class A1 {
+    
+    
     //CustomHashMap<String, Integer> map = new CustomHashMap<>();  // Initialize with (Int) to start w/ default size
+    
+    public static Corpus corpus = new Corpus();
+    public static List<CustomHashMap<String,Integer>> categoryList = new ArrayList<>();
+    public static ArrayList<String> smallWordList;
+    
+    Map<String,Integer> sportList;
+    Map<String,Integer> weatherList;
+    Map<String,Integer> newsList;
+    Map<String,Integer> bookList;
+    Map<String,Integer> businessList;
+    Map<String,Integer> educationList;
+    Map<String,Integer> gamingList;
+    
+    
+    
+      public static void urlToTree(String url,int urlNum,int numberOfPages) throws FileNotFoundException, IOException {
+
+        int splitCounter = 0;
+        String tempWord;
+       
+//        CustomBTree tree = new CustomBTree(url);
+        
+      //  try{
+     
+            Document doc = Jsoup.connect(url).get();
+            String title = doc.title();
+            String body = doc.body().text();
+            String[] splitInput = body.split("\\s+");
+
+            CustomBTree tree = new CustomBTree(url,urlNum);
+            
+            Elements links = doc.select("a[href]");
+            List linksList = new ArrayList();
+
+            File file = new File(System.getProperty("user.dir") + "//pagefiles//" + title + ".txt");
+            System.out.println(file.getPath());
+            
+            for (Element link : links) {                    // Links on page
+               linksList.add(link.attr("abs:href"));
+            }
+
+            //addListToFile(urlFile, linksList);
+            
+            while(splitCounter < splitInput.length){
+                tempWord = splitInput[splitCounter];
+                tempWord = tempWord.replaceAll("\\p{Punct}",""); 
+                
+                
+                Word tempWordObject = new Word(tempWord);
+                //Word tempWordObject = new Word(url,tempWord,splitInput.length,numberOfPages);
+                BEntry tempEntry = new BEntry(tempWord,tempWordObject);
+                       
+                
+                tree.insert(tempEntry);
+                
+                
+              //  System.out.println(tempWordObject.getWord());
+              //  System.out.println(tree.getRoot());
+                
+                splitCounter++;
+            }
+            
+            
+        // Output
+        System.out.println("\n\n"+title);
+        //} catch(IOException e){
+        //}
+        //
+    }
+    
+    
     
     public static void checkTF(Map<String, Integer> map){
             Integer a = map.get("a");
@@ -127,24 +197,85 @@ public class A1 {
     }
 
 
-    
+
+    public static void urlToFile(String url,String urlFile) throws FileNotFoundException, IOException {
+
+        int splitCounter = 0;
+        String tempWord;
+       
+      //  try{
+     
+            Document doc = Jsoup.connect(url).get();
+            String title = doc.title();
+            String body = doc.body().text();
+            String[] splitInput = body.split("\\s+");
+
+            Elements links = doc.select("a[href]");
+            List linksList = new ArrayList();
+
+            
+            
+            File file = new File(System.getProperty("user.dir") + "//pagefiles//" + title + ".txt");
+            System.out.println(file.getPath());
+            
+            
+            //System.out.println(links.size());
+            for (Element link : links) {
+               //System.out.println("link.attr(\"abs:href\") : " + link.attr("abs:href"));
+               linksList.add(link.attr("abs:href"));
+            }
+
+            //addListToFile(urlFile, linksList);
+            
+            if (file.createNewFile()){
+                System.out.println("CREATED FILE: " + file.getPath());
+            }   // CREATE FILE TO ADD WORDS TOO
+            else { 
+                System.out.println("FAILED TO CREATE FILE...");
+            }
+            //BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            FileOutputStream out = new FileOutputStream(
+                    System.getProperty("user.dir") + "//pagefiles//" + title + ".txt");
+            
+            while(splitCounter < splitInput.length){
+                tempWord = splitInput[splitCounter];
+                tempWord = tempWord.replaceAll("\\p{Punct}",""); 
+                out.write(tempWord.getBytes());
+                
+                //System.out.println(tempWord + " : " + l);
+                
+                splitCounter++;
+            }
+            
+            out.close();
+
+       // System.out.println("links  :  " + links);
+        
+        
+        // Output
+        System.out.println("\n\n"+title);
+        //} catch(IOException e){
+        //}
+        //
+    }
+        
     /**                urlToMap Function
      * @param url
      * @param urlFile
      * @return Map
      * @throws java.io.IOException =
      */
-    //
-    //public static File urlToFile() {
-        
-    //}
-    
-    
-    public static CustomHashMap urlToMap(String url,String urlFile) throws IOException{
-        CustomHashMap map = new CustomHashMap<>();
+    /* new one? */
+        public static CustomHashMap urlToMap(String url,String urlFile, String cat) throws IOException{
+        CustomHashMap map = new CustomHashMap<>(url, cat);
         int splitCounter = 0;  
         int loopCounter = 0;
         int linkCounter = 0;
+        String alreadyAdded[] = new String[5000];
+        int addedCounter = 0;
+        
+        boolean needsAdd;
+        
         
         String tempWord;
         
@@ -174,16 +305,65 @@ public class A1 {
 
             addListToFile(urlFile, linksList);
 
+            // **
+              File file = new File(System.getProperty("user.dir") + "//pagefiles//" + title + ".txt");
+              FileOutputStream out = new FileOutputStream(
+                    System.getProperty("user.dir") + "//pagefiles//" + title + ".txt");
+            out.write(title.getBytes());
+            out.close();
+            FileWriter fr = new FileWriter(file);
+            BufferedWriter  br = new BufferedWriter(fr);
+            // **
+            
+            
             while(splitCounter < splitInput.length){
                 tempWord = splitInput[splitCounter];
                 tempWord = tempWord.replaceAll("\\p{Punct}",""); 
                 int l = map.get(tempWord);
+                needsAdd = true;
+                
+                if (addedCounter == 0) {
+                    
+                    corpus.addWord(tempWord);
+                    alreadyAdded[addedCounter] = tempWord;
+                    System.out.println(tempWord + " word count in corpus : " + corpus.getWordCount(tempWord));
+                    addedCounter++;
+                    needsAdd = false;
+                    
+                } else {
+                    
+                    System.out.println(": " + alreadyAdded[0]);
+                    for (int i=0; i < addedCounter - 1; i++){               // loop through added words to check if equal
+                      //  System.out.println(i);
+                      //  System.out.println(alreadyAdded[i]);
+                      
+                        if (alreadyAdded[i].compareTo(tempWord) == 0){
+                            needsAdd = false;
+                            System.out.println(tempWord + " word count in corpus : " + corpus.getWordCount(tempWord));
+                        
+                        }
+                    }
+                    
+                    if (needsAdd) {
+                        corpus.addWord(tempWord);
+                        alreadyAdded[addedCounter] = tempWord;
+                        System.out.println(tempWord + " word count in corpus : " + corpus.getWordCount(tempWord));
+                        addedCounter++;
+                        needsAdd = false;
+                    }
+                }
+                
                 
                 /*
-                if (checkForURL(tempWord.toLowerCase(),"words.txt") == false) {
-                    addToFile("words.txt", tempWord.toLowerCase());
+                if (checkForURL(tempWord.toLowerCase(),urlFile) == false) {
+                    addToFile(urlFile, tempWord.toLowerCase());
                 }
                 */
+                // ***************
+                br.write(tempWord);
+                br.newLine();
+                // ******************
+            
                 
                 if (l == 0){
                     map.put(tempWord.toLowerCase(), l);
@@ -195,6 +375,144 @@ public class A1 {
                 
                 splitCounter++;
             }
+            
+            br.close();  // **
+      /* 
+        while (loopCounter < links.size()){
+           
+            Matcher m = pattern.matcher(links.get(loopCounter).toString());
+            System.out.println(links.get(loopCounter));
+            //System.out.println(m.find());
+            while(m.find()){
+               // System.out.println(m);
+               // System.out.println("m.group(0) " + m.group(0));
+                //System.out.println("links : " + m.group(1));
+            }
+            loopCounter++;
+        }
+        */
+       // System.out.println("links  :  " + links);
+        
+        
+        // Output
+        System.out.println("\n\n"+title);
+        } catch(IOException e){
+        }
+        //
+        return map;
+    }
+        // old
+    public static CustomHashMap urlToMap(String url,String urlFile) throws IOException{
+        CustomHashMap map = new CustomHashMap<>(url);
+        int splitCounter = 0;  
+        int loopCounter = 0;
+        int linkCounter = 0;
+        String alreadyAdded[] = new String[5000];
+        int addedCounter = 0;
+        
+        boolean needsAdd;
+        
+        
+        String tempWord;
+        
+        String hrefRegex = 
+                "<a[^>]*>(.*?)</a>";
+        Pattern pattern = Pattern.compile(hrefRegex);
+        
+        try{
+            
+            File input = new File(url);
+
+            //Document doc = Jsoup.parse(input, "UTF-8", "http://example.com/");
+
+            Document doc = Jsoup.connect(url).get();
+            String title = doc.title();
+            String body = doc.body().text();
+            String[] splitInput = body.split("\\s+");
+
+            Elements links = doc.select("a[href]");
+            List linksList = new ArrayList();
+
+            System.out.println(links.size());
+            for (Element link : links) {
+               //System.out.println("link.attr(\"abs:href\") : " + link.attr("abs:href"));
+               linksList.add(link.attr("abs:href"));
+            }
+
+            addListToFile(urlFile, linksList);
+
+            // **
+              File file = new File(System.getProperty("user.dir") + "//pagefiles//" + title + ".txt");
+              FileOutputStream out = new FileOutputStream(
+                    System.getProperty("user.dir") + "//pagefiles//" + title + ".txt");
+            out.write(title.getBytes());
+            out.close();
+            FileWriter fr = new FileWriter(file);
+            BufferedWriter  br = new BufferedWriter(fr);
+            // **
+            
+            
+            while(splitCounter < splitInput.length){
+                tempWord = splitInput[splitCounter];
+                tempWord = tempWord.replaceAll("\\p{Punct}",""); 
+                int l = map.get(tempWord);
+                needsAdd = true;
+                
+                if (addedCounter == 0) {
+                    
+                    corpus.addWord(tempWord);
+                    alreadyAdded[addedCounter] = tempWord;
+                    System.out.println(tempWord + " word count in corpus : " + corpus.getWordCount(tempWord));
+                    addedCounter++;
+                    needsAdd = false;
+                    
+                } else {
+                    
+                    System.out.println(": " + alreadyAdded[0]);
+                    for (int i=0; i < addedCounter - 1; i++){               // loop through added words to check if equal
+                      //  System.out.println(i);
+                      //  System.out.println(alreadyAdded[i]);
+                      
+                        if (alreadyAdded[i].compareTo(tempWord) == 0){
+                            needsAdd = false;
+                            System.out.println(tempWord + " word count in corpus : " + corpus.getWordCount(tempWord));
+                        
+                        }
+                    }
+                    
+                    if (needsAdd) {
+                        corpus.addWord(tempWord);
+                        alreadyAdded[addedCounter] = tempWord;
+                        System.out.println(tempWord + " word count in corpus : " + corpus.getWordCount(tempWord));
+                        addedCounter++;
+                        needsAdd = false;
+                    }
+                }
+                
+                
+                /*
+                if (checkForURL(tempWord.toLowerCase(),"words.txt") == false) {
+                    addToFile("words.txt", tempWord.toLowerCase());
+                }
+                */
+                // ***************
+                br.write(tempWord);
+                br.newLine();
+                // ******************
+            
+                
+                if (l == 0){
+                    map.put(tempWord.toLowerCase(), l);
+                } else {
+                    map.increment(tempWord);
+                }
+              
+                //System.out.println(tempWord + " : " + l);
+                
+                splitCounter++;
+            }
+            
+            br.close();  // **
       /* 
         while (loopCounter < links.size()){
            
@@ -373,7 +691,7 @@ public class A1 {
         System.out.println("  | tfidf : " + tfidf);
         
     }
-    public static Double tfOfWord(CustomHashMap<String, Integer> map,String wordIn){
+    public static Double tfOfWord(CustomHashMap map,String wordIn){
         Double wordTF = 0.0;
         Integer wordCount = map.get(wordIn);
 
@@ -458,9 +776,214 @@ public class A1 {
         }
         return similarity;
     }
+    
+    
       
     
+    public static CustomBTree mapToTree(CustomHashMap map, String url,int urlNum,int numberOfPages) throws FileNotFoundException, IOException {
+
+        int splitCounter = 0;
+        String tempWord;
+        boolean needsAdd;
+        CustomBTree tree = new CustomBTree(url,urlNum);
+        tree.category = (String) map.getCategory();
+        
+        for (int i = 0; i < map.words.size(); i++) {
+           // tempWord =  (String) map.words[i];
+            tempWord = map.words.get(i).toString();
+            
+            map.get(tempWord);
+            
+            Double tf = tfOfWord(map,tempWord);
+            
+            System.out.println("\n\n\ntempWord " + tempWord + "TF = " + tf + "  @ i : " + i);
+            
+            Word tempWordObject = new Word(tempWord, tf);
+            BEntry tempEntry = new BEntry(tempWord,tempWordObject);
+            tree.insert(tempEntry);
+           
+        }
+        return tree;
+    }
+    public static void makeCategory() throws IOException {          //Initialize Categorys
+        
+        System.out.println("Making Categories");
+        
+        CustomHashMap sportsMap = new CustomHashMap();
+        CustomHashMap weatherMap = new CustomHashMap();
+        CustomHashMap newsMap = new CustomHashMap();
+        CustomHashMap bookMap = new CustomHashMap();
+        CustomHashMap businessMap= new CustomHashMap();
+        CustomHashMap educationMap= new CustomHashMap();
+        CustomHashMap gamingMap = new CustomHashMap();
+        
+        sportsMap = urlToMap("https://www.espn.com/","sports.txt", "sports");
+        weatherMap = urlToMap("https://www.weather.com/","weather.txt", "weather");
+        newsMap = urlToMap("https://news.google.com/","news.txt","news");
+        bookMap = urlToMap("http://www.barnesandnoble.com/","books.txt","books");
+	businessMap = urlToMap("http://www.businessinsider.com/","business.txt","business");
+	educationMap = urlToMap("http://www.oswego.edu/","education.txt","education");
+        gamingMap = urlToMap("https://www.pcgamer.com/","gaming.txt","gaming");
+        
+        categoryList.add(sportsMap);
+        categoryList.add(weatherMap);
+        categoryList.add(newsMap);
+        categoryList.add(bookMap);
+        categoryList.add(businessMap);
+        categoryList.add(educationMap);
+        categoryList.add(gamingMap);
+    }   
+    
+
+    
+    public static void getCategory(CustomHashMap testMap) throws IOException {
+        
+        ArrayList<String> wordList = readWordsToList("words.txt");
+        //ArrayList<String> wordList = corpus.getWords();
+        
+        List<Integer> similarity = new ArrayList<Integer>();
+        List<Integer> top5;
+        
+        int sensitivity = 1;            // 1->3 3 = most sensitive
+        int closest = 0;
+
+        for(int i = 0; i < categoryList.size();i++){
+            System.out.println("InCat");
+            similarity.add(compareMaps(testMap,categoryList.get(i),wordList,sensitivity)); 
+            if (Collections.max(similarity) > similarity.get(closest)){
+                closest = i;
+            }
+        }
+        String category = categoryList.get(closest).getCategory();
+        //GUI.setText("f");
+        
+        testMap.category = category;
+        top5 = setTop5(similarity);
+        
+        GUI.setCategory(category);
+        for (int i=0;i < 5; i++){
+            try{ 
+                String tempString = categoryList.get(similarity.get(top5.get(i))).getCategory();
+                GUI.setArea(tempString);
+            } catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+        
+        //
+    }
+    
+    public static List<Integer> setTop5(List<Integer> list){     // Do this so i keep the sort seperate
+        
+        Collections.sort(list);
+        List<Integer> top5 = new ArrayList<Integer>(list.subList(list.size() -5, list.size()));
+        for (int i=0;i < 5; i++){
+            GUI.setArea(top5.get(i).toString());
+        }
+            return top5;
+            
+    }
+    
+    public static int compareTrees(CustomBTree tree1, CustomBTree tree2, int sensitivity){
+        
+        //ArrayList<String> words = corpus.getWords()
+        ArrayList<String> words = smallWordList;
+        int counter = 0;
+        int similarity = 0;
+        Double map1TF = 0.0;
+        Double map2TF = 0.0;
+        
+        Integer wordCountMap1;
+        Integer wordCountMap2;
+        
+        
+        
+        //CustomHashMap<String, Double> compareMap = new CustomHashMap();
+        
+        while (counter < words.size()){
+            
+            //wordCountMap1 = tree1.get(words.get(counter));
+            Word findWord1 = tree1.getRoot().search(words.get(counter));
+            if (findWord1 != null){
+            map1TF = findWord1.getTf();
+           // if(wordCountMap1 != null){
+           // map1TF = wordCountMap1.doubleValue() / tree1.getSizeOfMap();
+             //   System.out.print("\n" + words.get(counter) + " in tree1 : " + wordCountMap1.longValue());
+                System.out.print("  |   TF : " + map1TF);
+            }
+           // }
+            
+          //  wordCountMap2 = map2.get(words.get(counter));
+         
+            Word findWord2 = tree2.getRoot().search(words.get(counter));
+            if (findWord2 != null){
+                map2TF = findWord2.getTf();
+           // if(wordCountMap2 != null){
+         //   map2TF = wordCountMap2.doubleValue() / tree2.getSizeOfMap();
+            //    System.out.print("\n" + words.get(counter) + " in tree2 : " + wordCountMap2.longValue());
+                System.out.print("  |   TF : " + map2TF);
+           // }
+              }
+            if (map1TF != 0 && map2TF != 0){
+           
+                switch (sensitivity) {
+                    case(1):
+                       if ((map1TF > (map2TF - .005)) && (map1TF < (map2TF + .005))){
+                            similarity++;           // INCREMENT IF WITHIN RANGE
+                       }
+                    case(2):
+                        if ((map1TF > (map2TF - .001)) && (map1TF < (map2TF + .001))){
+                            similarity++;           // INCREMENT IF WITHIN RANGE
+                        }
+                    case(3):
+                        if ((map1TF > (map2TF - .0005)) && (map1TF < (map2TF + .0005))){
+                            similarity++;           // INCREMENT IF WITHIN RANGE
+                        }     
+               }
+           }
+              
+                   /*
+            if (sensitivity == 1){
+                if ((map1TF > (map2TF - .005)) && (map1TF < (map2TF + .005))){
+                    similarity++;           // INCREMENT IF WITHIN RANGE
+                }
+            }
+            if (sensitivity == 2){
+                if ((map1TF > (map2TF - .001)) && (map1TF < (map2TF + .001))){
+                    similarity++;           // INCREMENT IF WITHIN RANGE
+                }
+            }
+            if (sensitivity == 3){
+                if ((map1TF > (map2TF - .0005)) && (map1TF < (map2TF + .0005))){
+                    similarity++;           // INCREMENT IF WITHIN RANGE
+                }
+            }
+           */
+            counter++;
+            //compareMap.putIfAbsent(words.get(counter).toLowerCase(), map1TF);
+        }
+        return similarity;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     public static void main(String input) throws Exception {
+        
+        smallWordList = readWordsToList("words.txt");
         
         int pageNumber = 0;
         int closest = 0;
@@ -471,6 +994,12 @@ public class A1 {
         String wordsFile = "words.txt";
         String mostSimilarLink = "IDK YET SORRY";
         
+        System.out.println("try and make category");
+        /**/ makeCategory();
+        
+        urlToFile(inputUrl,urlFile);
+        
+        System.out.println("Hi");
         
         int sensitivity = 1;            // 1->3 3 = most sensitive
         
@@ -482,19 +1011,35 @@ public class A1 {
          
         inputMap = urlToMap(inputUrl,urlFile);
         
-        //System.out.println(inputUrl);
-       
-       
         List<String> urlList = readFile(urlFile);
         List<CustomHashMap<String,Integer>> listOfMaps = new ArrayList<>();
         
-        while (pageNumber < urlList.size()){
+        int numberOfPages = listOfMaps.size();
+        
+        //System.out.println(inputUrl);
+        
+        CustomBTree inputTree = mapToTree(inputMap,inputUrl,0,numberOfPages);
+        
+        getCategory(inputMap);
+        
+        while (pageNumber < 5){
+        //while (pageNumber < urlList.size()){
             System.out.println(urlList.get(pageNumber));
             
            
             tempMap = urlToMap(urlList.get(pageNumber),urlFile);
-            similarity.add(pageNumber, compareMaps(inputMap,tempMap,wordList,sensitivity));
-            System.out.println("\n\nSimilarity between inputMap & map @ page # : " + pageNumber + 
+            
+            //getCategory(tempMap);
+            
+            CustomBTree tempTree = mapToTree(tempMap,urlList.get(pageNumber),pageNumber+1,numberOfPages);
+            
+            //urlToTree(urlList.get(pageNumber),pageNumber+1,numberOfPages);
+            
+            similarity.add(pageNumber, compareTrees(inputTree,tempTree,sensitivity));
+            //similarity.add(pageNumber, compareTrees(inputTree,tempTree,wordList,sensitivity));
+            
+            //similarity.add(pageNumber, compareMaps(inputMap,tempMap,wordList,sensitivity));
+            System.out.println("\n\nSimilarity between inputTree & tree @ page # : " + pageNumber + 
                     " = " + similarity.get(pageNumber));
            
             
@@ -544,7 +1089,8 @@ public class A1 {
         //similar / total number of words  * tf5
         
         
-        GUI.setTextField(urlList.get(closest));
+        GUI.setText(urlList.get(closest));
+        getCategory(inputMap);
         // addToFile(urlFile, "test");
         //checkSym(listOfMaps);  // Improved with tfidfOfWord
         //CustomHashMap<String, Integer> map = urlToMap("https://en.wikipedia.org/wiki/Java_ConcurrentMap");
