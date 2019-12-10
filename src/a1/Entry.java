@@ -7,6 +7,8 @@ package a1;
 
 /**
  *
+ * My " Bucket "
+ * 
  * @author CJ
  */
 public class Entry {
@@ -15,6 +17,9 @@ public class Entry {
     //private V value;
     private int key;
     private int count;
+    
+    
+            
     private Entry root;
     private Entry next;
     private Entry prev;
@@ -27,6 +32,11 @@ public class Entry {
         this.next = null;
         this.prev = null;
        
+    }
+    
+    public Entry(Entry e){
+	this.key = e.getKey();
+	this.count = e.getCount();
     }
 
     Entry() {
