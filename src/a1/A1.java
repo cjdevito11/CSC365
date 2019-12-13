@@ -37,12 +37,10 @@ public class A1 {
     //CustomHashMap<String, Integer> map = new CustomHashMap<>();  // Initialize with (Int) to start w/ default size
     
     public static ArrayList<String> urlList = new ArrayList<>();
-            
     public static Corpus corpus = new Corpus();
     public static List<CustomHashMap<String,Integer>> categoryList = new ArrayList<>();
     public static List<CustomBTree> categoryTreeList = new ArrayList<>();
     public static ArrayList<String> smallWordList;
-    
     
     public static List<CustomHashMap<String,Integer>> listOfMaps = new ArrayList<>();
     public static List<CustomBTree> listOfTrees = new ArrayList<>();
@@ -51,14 +49,17 @@ public class A1 {
     public static List<CustomHashMap<String,Integer>> wikiMaps = new ArrayList<>();
     public static Integer[][] wikiEdges = new Integer[1000][1000];
    
+    //public static String[] edgeList = new String[5000];
     public static ArrayList<String> edgeList = new ArrayList<>();
     public static ArrayList<String> wikiList;
     
-    public static Edge[] edges;
+    public static Edge[] edges = new Edge[500000];
+    public static Node[] nodes = new Node[500000];
+    
     public static int edgeCount = 0;
+    public static int nodeCount = 0;
     
     static void findPath(String srcUrl, String dstUrl) throws IOException {
-       // Edge[] edges = null;
         Graph graph;
         String urlFile = "wiki.txt";
         String wordsFile = "words.txt";
@@ -74,24 +75,33 @@ public class A1 {
         CustomHashMap<String, Integer> dstMap;                    // DEST at [1]
          
         CustomHashMap<String, Integer> tempMap;
-        Node tempDstNode; 
         
-        srcMap = urlToMap(srcUrl,urlFile);
-        dstMap = urlToMap(dstUrl,urlFile);
+        Node tempDstNode; 
         
         Node srcNode = new Node(srcUrl);
         Node dstNode = new Node(dstUrl);
+        nodeCount++;
+        nodeCount++;
+        
+        srcMap = urlToMap(srcUrl,urlFile);
         
         for(int i=0;i<edgeList.size();i++){
             tempDstNode = new Node(edgeList.get(i));
             edges[edgeCount] = new Edge(srcNode,tempDstNode);    
             edgeCount++;
+            tempDstNode.addEdge(edges[edgeCount]);
+            nodes[nodeCount] = (tempDstNode);
+            nodeCount++;
         }
         
+        dstMap = urlToMap(dstUrl,urlFile);
         for(int i=0;i<edgeList.size();i++){
             tempDstNode = new Node(edgeList.get(i));
             edges[edgeCount] = new Edge(dstNode,tempDstNode); 
             edgeCount++;
+            tempDstNode.addEdge(edges[edgeCount]);
+            nodes[nodeCount] = (tempDstNode);
+            nodeCount++;
         }
         
         wikiMaps.add(srcMap);
@@ -105,34 +115,71 @@ public class A1 {
             for (int pageNumber=0;pageNumber < wikiList.size(); pageNumber++){
                 
                 CustomHashMap tempSrcMap = urlToMap(wikiList.get(pageNumber),urlFile);
-                Node tempSrcNode = new Node(wikiList.get(pageNumber));
+                
                 wikiMaps.add(srcMap);
+                
+                Node tempSrcNode = new Node(wikiList.get(pageNumber));
+
+              //  edgeList.clear();
+               
                 
                 for(int k=1;k < wikiList.size(); k++){
                     
                     CustomHashMap tempDstMap = urlToMap(wikiList.get(k),urlFile);
                     wikiMaps.add(dstMap);
 
-                    for(int i=0;i<edgeList.size();i++){
+                    tempDstNode = new Node(wikiList.get(k));
+                    
+                   // for(int i=0;i<edgeList.size() && edgeList.get(i) != null ;i++){
                         
-                        tempDstNode = new Node(edgeList.get(i));
-                        //tempDstNode.setEdges(edgeList);
-                        edges[edgeCount] = new Edge(tempSrcNode,tempDstNode,compareMaps(tempSrcMap,tempDstMap,wordList,sensitivity));
+                        int compare = compareMaps(tempSrcMap,tempDstMap,wordList,sensitivity);
                         
+                        edges[edgeCount] = new Edge(tempSrcNode,tempDstNode,compare);
+                        
+                        tempDstNode.addEdge(edges[edgeCount]);
+                        tempSrcNode.addEdge(edges[edgeCount]);
+                        
+                        nodes[nodeCount] = (tempDstNode);
+                        nodes[nodeCount] = (tempSrcNode);
+                        
+                        edges[edgeCount].setSrc(tempSrcNode);
+                        edges[edgeCount].setDest(tempDstNode);
                         edgeCount++;
-                    }
-
+                        
+                   // }
+                    
+                    //edgeList.clear();
                 }
                 edges[edgeCount] = new Edge(srcNode,tempSrcNode,compareMaps(srcMap,tempSrcMap,wordList,sensitivity));
+                
+                srcNode.addEdge(edges[edgeCount]);
+                tempSrcNode.addEdge(edges[edgeCount]);
+                
+                edges[edgeCount].setSrc(srcNode);
+                edges[edgeCount].setDest(tempSrcNode);
+                nodes[nodeCount] = srcNode;
+                
                 edgeCount++;
+                
                 edges[edgeCount] = new Edge(dstNode,tempSrcNode,compareMaps(dstMap,tempSrcMap,wordList,sensitivity));
+                
+                dstNode.addEdge(edges[edgeCount]);
+                tempSrcNode.addEdge(edges[edgeCount]);
+                
+                edges[edgeCount].setSrc(tempSrcNode);
+                edges[edgeCount].setDest(dstNode);
+                nodes[nodeCount] = tempSrcNode;
+                
                 edgeCount++;
             }   
         } catch(Exception e){System.out.println(e);}
    
+        
         graph = new Graph(edges,edgeCount);
+        //Graph gr = new Graph(edges, edgeCount, nodes,nodeCount);
+        
         graph.dijkstra();
-    
+       // gr.dijkstra();
     }
     
     Map<String,Integer> sportList;
@@ -220,10 +267,7 @@ public class A1 {
         //} catch(IOException e){
         //}
         //
-    }
-    
-    
-    
+    }   
     public static void checkTF(Map<String, Integer> map){
             Integer a = map.get("a");
         if(a != null){
@@ -232,7 +276,6 @@ public class A1 {
             System.out.println("aTF(a term frequency) : " + aTF);
         }
     }
-    
     public static boolean checkForURL(String url, String file) throws FileNotFoundException{
         int counter = 0;
         File realFile = new File(file);
@@ -257,8 +300,6 @@ public class A1 {
             return true;
         }
     }
-    
-    // ADD STRING
     public static void addToFile(String file, String url) throws IOException {
     BufferedWriter writer = new BufferedWriter(
                                 new FileWriter(file, true)  //Set true for append mode
@@ -267,8 +308,6 @@ public class A1 {
     writer.write(url);
     writer.close();
 }
-    
-    // ADD LIST
     public static void addListToFile(String file, List urlList) throws IOException {
         int counter = 0;
         int addCounter = 0; 
@@ -311,16 +350,12 @@ public class A1 {
         }
         
     }
-    
     private static String trim(String s, int width) {
         if (s.length() > width)
             return s.substring(0, width-1) + ".";
         else
             return s;
     }
-
-
-
     public static void urlToFile(String url,String urlFile) throws FileNotFoundException, IOException {
 
         int splitCounter = 0;
@@ -419,7 +454,7 @@ public class A1 {
             //System.out.println(links.size());
             for (Element link : links) {
                 if (wikiList.contains(link)){
-                edgeList.add(link.text());
+                edgeList.add((link.text()));
                 }
                //System.out.println("link.attr(\"abs:href\") : " + link.attr("abs:href"));
                 if (link.text().contains("www.wikipedia.com")){
@@ -529,9 +564,7 @@ public class A1 {
         //
         return map;
     }
-        
-        
-        
+ 
         // old
     public static CustomHashMap urlToMap(String url,String urlFile) throws IOException{
         CustomHashMap map = new CustomHashMap<>(url);
@@ -561,10 +594,15 @@ public class A1 {
 
             System.out.println(links.size());
             for (Element link : links) {
-                if (wikiList.contains(link)){
-                edgeList.add(link.text());
+              //  if (wikiList.contains(link.text())){
+               //     Node tempDstNode = new Node(link.text());
+               //     edges[edgeCount] = new Edge(srcNode,tempDstNode);    
+               //     edgeCount++;
+                    
+                System.out.println(link.attr("abs:href"));
+                edgeList.add((link.attr("abs:href")));
                 b++;
-                }
+               // }
                //System.out.println("link.attr(\"abs:href\") : " + link.attr("abs:href"));
                 if (link.text().contains("www.wikipedia.com")){
                    linksList.add(link.attr("abs:href"));
@@ -912,6 +950,7 @@ public class A1 {
             counter++;
             //compareMap.putIfAbsent(words.get(counter).toLowerCase(), map1TF);
         }
+        GUI.setOutput("compared " + map1.url + " w/ " + map2.url);
         return similarity;
     }
     
