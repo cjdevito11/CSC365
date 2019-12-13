@@ -1,11 +1,19 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package a1.a3;
 
+import java.util.ArrayList;
 import a1.a3.Triplet;
-
 import java.io.*;
 import java.util.*;
 
-
+/**
+ *
+ * @author CJ
+ */
 public class Graph {
     private static int EDGE_DISTANCE;
     
@@ -37,17 +45,19 @@ public class Graph {
     
     public int calcNodeCount(Edge[] edges){
         int nodes = 0;
-        
-        for (Edge edge : edges) {
-            if (edge.getDestIndex() > nodes){
-                nodes = edge.getDestIndex();
+        if(edges != null){
+            for (Edge edge : edges) {
+                if (edge.getDestIndex() > nodes){
+                    nodes = edge.getDestIndex();
+                }
+                if (edge.getSrcIndex() > nodes) {
+                    nodes = edge.getSrcIndex();
+                }
             }
-            if (edge.getSrcIndex() > nodes) {
-                nodes = edge.getSrcIndex();
-            }
+            nodes++;
+            return nodes;
         }
-        nodes++;
-        return nodes;
+        return 0;
     }
     
     // start from source // find dest
@@ -109,24 +119,21 @@ public class Graph {
     public int getEdgeCount() { return edgeCount; }
  
     
-   /* public static void main(String[] args) {
+    public static void main(String[] args) {
+        /*
         Edge[] edges = {
           new Edge(0, 2, 21.6), new Edge(0, 3, 18.2), new Edge(0, 4, 2.3),
           new Edge(0, 1, 3.5), new Edge(1, 3, 2.4), new Edge(1, 4, 3.5),
           new Edge(1, 5, 1.4), new Edge(2, 4, 10.1), new Edge(3, 5, 4),
           new Edge(4, 5, 42.2), new Edge(4, 6, 6.7), new Edge(4, 7, 2),
-          new Edge(5, 6, 5.4), new Edge(6, 7, 5)
+          new Edge(5, 6, 5.4), new Edge(6, 7, 5), new Edge(1,2,5)
         };
         
         
         Graph g = new Graph(edges);
         g.dijkstra();
         
-        
-        
-        
-        
-        
+        */
   }
-    */
+    
 }
