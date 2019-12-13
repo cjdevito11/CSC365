@@ -19,7 +19,7 @@ public class CustomHashMap<String,Integer> {
     private static int sizeCounter = 0;
     private int wordsSize = 100;
     
-    String url;
+    public String url;
     public String category;
     Entry[] table;
     ArrayList<String> words = new ArrayList();
@@ -144,7 +144,7 @@ public class CustomHashMap<String,Integer> {
             if (count == 0) { count = 1; }
              table[hash] = new Entry(hashKey, count);
              
-             System.out.println("\n\n\n\n\n words.length: " + words.size());
+            // System.out.println("\n\n\n\n\n words.length: " + words.size());
              words.add(key);
              
              sizeCounter++;
