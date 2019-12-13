@@ -50,7 +50,8 @@ public class A1 {
     
     public static List<CustomHashMap<String,Integer>> wikiMaps = new ArrayList<>();
     public static Integer[][] wikiEdges = new Integer[1000][1000];
-    public static String[] edgeList = new String[1000];
+   
+    public static ArrayList<String> edgeList = new ArrayList<>();
     public static ArrayList<String> wikiList;
     
     public static Edge[] edges;
@@ -73,24 +74,28 @@ public class A1 {
         CustomHashMap<String, Integer> dstMap;                    // DEST at [1]
          
         CustomHashMap<String, Integer> tempMap;
-         
+        Node tempDstNode; 
+        
         srcMap = urlToMap(srcUrl,urlFile);
+        dstMap = urlToMap(dstUrl,urlFile);
         
         Node srcNode = new Node(srcUrl);
+        Node dstNode = new Node(dstUrl);
         
-        for(int i=0;i<edgeList.length && edgeList[i]!= null;i++){
-            Node dstNode = new Node(edgeList[i]);
-            edges[edgeCount] = new Edge(srcNode,dstNode);    
+        for(int i=0;i<edgeList.size();i++){
+            tempDstNode = new Node(edgeList.get(i));
+            edges[edgeCount] = new Edge(srcNode,tempDstNode);    
+            edgeCount++;
         }
         
-        dstMap = urlToMap(dstUrl,urlFile);
-        srcNode = new Node(srcUrl);
-        
-        for(int i=0;i<edgeList.length && edgeList[i]!= null;i++){
-            Node dstNode = new Node(edgeList[i]);
-            edges[edgeCount] = new Edge(srcNode,dstNode);  
+        for(int i=0;i<edgeList.size();i++){
+            tempDstNode = new Node(edgeList.get(i));
+            edges[edgeCount] = new Edge(dstNode,tempDstNode); 
+            edgeCount++;
         }
-       
+        
+        wikiMaps.add(srcMap);
+        wikiMaps.add(dstMap);
         // IF EQUAL // CONNECT BREAK
        
         
@@ -99,28 +104,33 @@ public class A1 {
 
             for (int pageNumber=0;pageNumber < wikiList.size(); pageNumber++){
                 
-                srcMap = urlToMap(wikiList.get(pageNumber),urlFile);
-                srcNode = new Node(wikiList.get(pageNumber));
+                CustomHashMap tempSrcMap = urlToMap(wikiList.get(pageNumber),urlFile);
+                Node tempSrcNode = new Node(wikiList.get(pageNumber));
                 wikiMaps.add(srcMap);
                 
                 for(int k=1;k < wikiList.size(); k++){
                     
-                    dstMap = urlToMap(wikiList.get(k),urlFile);
+                    CustomHashMap tempDstMap = urlToMap(wikiList.get(k),urlFile);
                     wikiMaps.add(dstMap);
 
-                    for(int i=0;i<edgeList.length && edgeList[i]!= null;i++){
+                    for(int i=0;i<edgeList.size();i++){
                         
-                        Node dstNode = new Node(edgeList[i]);
-                        edges[edgeCount] = new Edge(srcNode,dstNode,compareMaps(srcMap,dstMap,wordList,sensitivity));
+                        tempDstNode = new Node(edgeList.get(i));
+                        //tempDstNode.setEdges(edgeList);
+                        edges[edgeCount] = new Edge(tempSrcNode,tempDstNode,compareMaps(tempSrcMap,tempDstMap,wordList,sensitivity));
+                        
+                        edgeCount++;
                     }
 
-                    //edges[edgeCount] = new Edge(,link.text());    
-
                 }
+                edges[edgeCount] = new Edge(srcNode,tempSrcNode,compareMaps(srcMap,tempSrcMap,wordList,sensitivity));
+                edgeCount++;
+                edges[edgeCount] = new Edge(dstNode,tempSrcNode,compareMaps(dstMap,tempSrcMap,wordList,sensitivity));
+                edgeCount++;
             }   
         } catch(Exception e){System.out.println(e);}
-        
-        graph = new Graph(edges);
+   
+        graph = new Graph(edges,edgeCount);
         graph.dijkstra();
     
     }
@@ -409,7 +419,7 @@ public class A1 {
             //System.out.println(links.size());
             for (Element link : links) {
                 if (wikiList.contains(link)){
-                edgeList[b] = link.text();
+                edgeList.add(link.text());
                 }
                //System.out.println("link.attr(\"abs:href\") : " + link.attr("abs:href"));
                 if (link.text().contains("www.wikipedia.com")){
@@ -417,9 +427,9 @@ public class A1 {
                 }
                 b++;
             }
-            for (int x=links.size();x < edgeList.length;x++){
-                edgeList[x] = null;                             // empty the rest of array
-            }
+            //for (int x=links.size();x < edgeList.length;x++){
+            //    edgeList[x] = null;                             // empty the rest of array
+            //}
 
             addListToFile(urlFile, linksList);
 
@@ -552,7 +562,7 @@ public class A1 {
             System.out.println(links.size());
             for (Element link : links) {
                 if (wikiList.contains(link)){
-                edgeList[b] = link.text();
+                edgeList.add(link.text());
                 b++;
                 }
                //System.out.println("link.attr(\"abs:href\") : " + link.attr("abs:href"));
@@ -561,9 +571,9 @@ public class A1 {
                 }
                 
             }
-            for (int x=links.size();x < edgeList.length;x++){
-                edgeList[x] = null;                             // empty the rest of array
-            }
+          //  for (int x=links.size();x < edgeList.length;x++){
+          //      edgeList[x] = null;                             // empty the rest of array
+          //  }
 
             addListToFile(urlFile, linksList);
 
