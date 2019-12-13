@@ -13,9 +13,9 @@ import java.io.UnsupportedEncodingException;
  */
 public class Word {
     
-    public static Corpus corpus;
+    public static Corpus corpus = A1.corpus;
     private String word;
-    
+    private long hash;
     private int rawFreq = 0;
     private int totalWords;
     
@@ -31,10 +31,16 @@ public class Word {
     private int skipped = 0;
     
     public Word(String inputWord){
-        this.word = inputWord;
+        //this.word = inputWord;
+        this.hash = hash(inputWord);
         this.rawFreq = 1;
     }
-    
+    public int hash(String key){
+        int hashKey = key.hashCode();
+        
+        if (hashKey < 0) { hashKey = (hashKey * -1 ) -1; }
+        return hashKey;
+    }
 /*
     public Word(String url, String inputWord, int total, int numOfPages) { 
         this.url = url;
@@ -66,17 +72,18 @@ public class Word {
         this.tf = tf;
     }
     public int getUtfLength(){
-        try { return word.getBytes("UTF-32BE").length;
-        } catch (UnsupportedEncodingException e){
+        try { System.out.println("UTFLENGTH : " + word.getBytes().length);
+            return word.getBytes().length;
+        } catch (Exception e){
             e.printStackTrace();
         }
         return 256;
     }
 
-    public byte[] getUrlUtfBytes(){
+    public byte[] getUtfBytes(){
         try {
             byte[] bytes = new byte[256];           //256 length
-            byte[] keyBytes = word.getBytes("UTF-32BE");
+            byte[] keyBytes = word.getBytes();
             int byteLength = keyBytes.length;
             
             for(int i = 0; i < keyBytes.length; i++) {
@@ -89,21 +96,22 @@ public class Word {
                 }
             }
             return bytes;
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) {}
         return null;
     }
+    
     public void incRawFreq() { rawFreq++; calcTf();}
     public int getRawFreq()  { return rawFreq; }
     
     public void setTf(double inputTf) { tf = inputTf; }
-    public double getTf() { return tf; }
+    public double getTf() { calcTf();
+        return tf; }
     
     public void setTfIdf(double inputTfIdf) { tfIdf = inputTfIdf; }
     public double getTfIdf() { return tfIdf; }
     
-    public void calcTf() { setTf(rawFreq / totalWords); }
+    public void calcTf() { setTf(rawFreq / corpus.words.size()); }
+    
     public void calcTf(double totalWords){ setTf(rawFreq / totalWords); }
     public void calcIdf() { idf = Math.log(numberOfPages / rawFreq); }
     //public void calcTfIdf() { tfIdf = tf * idf; }
