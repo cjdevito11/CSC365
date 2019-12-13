@@ -43,21 +43,39 @@ public class Graph {
         }
     }
     
+    public Graph(Edge[] edges,int edgeCount){ 
+        this.edges = edges;
+        nodeCount = calcNodeCount(edges);
+        nodes = new Node[nodeCount];  
+        
+        for (int n = 0; n < this.nodeCount; n++) {       // create each node
+            nodes[n] = new Node();
+        }
+                                                             //add edges
+        this.edgeCount = edgeCount;
+        for (int add=0; add < edgeCount ;add++){
+            ArrayList srcEdges = this.nodes[edges[add].getSrcIndex()].getEdges();
+            ArrayList destEdges = this.nodes[edges[add].getDestIndex()].getEdges();
+            
+            srcEdges.add(edges[add]);
+            destEdges.add(edges[add]);
+        }
+    }
+    
     public int calcNodeCount(Edge[] edges){
         int nodes = 0;
-        if(edges != null){
-            for (Edge edge : edges) {
-                if (edge.getDestIndex() > nodes){
-                    nodes = edge.getDestIndex();
-                }
-                if (edge.getSrcIndex() > nodes) {
-                    nodes = edge.getSrcIndex();
-                }
+        
+        for (Edge edge : edges) {
+            if (edge.getDestIndex() > nodes){
+                nodes = edge.getDestIndex();
             }
-            nodes++;
-            return nodes;
+            if (edge.getSrcIndex() > nodes) {
+                nodes = edge.getSrcIndex();
+            }
         }
-        return 0;
+        nodes++;
+        return nodes;
+
     }
     
     // start from source // find dest
@@ -132,8 +150,8 @@ public class Graph {
         
         Graph g = new Graph(edges);
         g.dijkstra();
-        
         */
+        
   }
     
 }
