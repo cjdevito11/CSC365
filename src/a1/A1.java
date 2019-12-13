@@ -5,7 +5,9 @@
  */
 package a1;
 
-import static a1.A2.corpus;
+
+import a1.a3.Edge;
+import a1.a3.Graph;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -30,9 +32,83 @@ public class A1 {
     
     //CustomHashMap<String, Integer> map = new CustomHashMap<>();  // Initialize with (Int) to start w/ default size
     
+    public static ArrayList<String> urlList = new ArrayList<>();
+            
     public static Corpus corpus = new Corpus();
     public static List<CustomHashMap<String,Integer>> categoryList = new ArrayList<>();
+    public static List<CustomBTree> categoryTreeList = new ArrayList<>();
     public static ArrayList<String> smallWordList;
+    
+    
+    public static List<CustomHashMap<String,Integer>> listOfMaps = new ArrayList<>();
+    public static List<CustomBTree> listOfTrees = new ArrayList<>();
+    
+    
+    public static List<CustomHashMap<String,Integer>> wikiMaps = new ArrayList<>();
+    public static Integer[][] wikiEdges = new Integer[1000][1000];
+    public static String[] edgeList = new String[1000];
+    
+    static void findPath(String srcUrl, String dstUrl) throws IOException {
+        Edge[] edges;
+        Graph graph;
+        
+        String urlFile = "wiki.txt";
+        String wordsFile = "words.txt";
+        
+        int sensitivity = 1; // 1-3
+        
+        ArrayList<String> wordList = readWordsToList(wordsFile);
+        ArrayList<String> wikiList = readFile(urlFile);
+        List<Integer> similarity = new ArrayList<>();
+        
+        CustomHashMap<String, Integer> srcMap;                    //  SRC at [0]
+        CustomHashMap<String, Integer> dstMap;                    // DEST at [1]
+         
+        CustomHashMap<String, Integer> tempMap;
+         
+        srcMap = urlToMap(srcUrl,urlFile);
+        
+        for(int i=0;i<edgeList.length && edgeList[i]!= null;i++){
+            wikiEdges[0][i] = edgeList[i];                          // set pointers to connects for src
+        }
+        
+        dstMap = urlToMap(dstUrl,urlFile);
+        
+        for(int i=0;i<edgeList.length && edgeList[i]!= null;i++){
+            wikiEdges[1][i] = edgeList[i];                          // set pointers to connects for dst
+        }
+       
+        // IF EQUAL // CONNECT BREAK
+        
+        int pageNumber = 0;
+        
+    // HAVE TO LOOP AND CHECK PAGE VS PAGE NOT JUST SRC VS PAGE HAVE TO CHECK EVERY COMBINATION FOR WEIGHTS
+        try {
+
+            while (pageNumber < wikiList.size()){
+
+                tempMap = urlToMap(wikiList.get(pageNumber),urlFile);
+
+                for(int i=0;i<edgeList.length && edgeList[i]!= null;i++){
+                    wikiEdges[pageNumber][i] = edgeList[i];            // set pointers to connects for pages
+                }
+                
+                wikiMaps.add(tempMap);
+
+                similarity.add(pageNumber, compareMaps(srcMap,tempMap,wordList,sensitivity));
+                System.out.println("\n\nSimilarity between src & tempMap @ page # : " + pageNumber + 
+                        " = " + similarity.get(pageNumber));
+                
+                        
+
+                pageNumber++;
+            }
+        } catch(Exception e){System.out.println(e);}
+        
+        //graph = new Graph(edges);
+        //graph.dijkstra();
+    
+    }
     
     Map<String,Integer> sportList;
     Map<String,Integer> weatherList;
@@ -41,6 +117,28 @@ public class A1 {
     Map<String,Integer> businessList;
     Map<String,Integer> educationList;
     Map<String,Integer> gamingList;
+    
+    public static String[] urlFiles = new String[10];
+    
+    public static HashMap<String,Double> mostSimilarKey = new HashMap<>();
+    public static String simKey;
+    
+    
+    
+    
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String BLACK = "\u001B[30m";
+    public static final String RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String PURPLE = "\u001B[35m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+    public static final String ANSI_WHITE = "\u001B[37m";
+    
+   
+    
+    
     
     
     
@@ -161,7 +259,7 @@ public class A1 {
         if (lines < 30){
         
                                 
-            while (counter < urlList.size()){
+            while (counter < urlList.size() && counter < 500){
                 tempURL = urlList.get(counter).toString();
                 if (checkForURL(tempURL,file) == false){
                     System.out.println("Add to list");
@@ -222,7 +320,9 @@ public class A1 {
             //System.out.println(links.size());
             for (Element link : links) {
                //System.out.println("link.attr(\"abs:href\") : " + link.attr("abs:href"));
+               if (link.toString().contains("www.wikipedia.com")){
                linksList.add(link.attr("abs:href"));
+                }
             }
 
             //addListToFile(urlFile, linksList);
@@ -268,20 +368,13 @@ public class A1 {
     /* new one? */
         public static CustomHashMap urlToMap(String url,String urlFile, String cat) throws IOException{
         CustomHashMap map = new CustomHashMap<>(url, cat);
-        int splitCounter = 0;  
-        int loopCounter = 0;
-        int linkCounter = 0;
+        int splitCounter = 0; 
         String alreadyAdded[] = new String[5000];
         int addedCounter = 0;
-        
+        int i=0;
         boolean needsAdd;
         
-        
         String tempWord;
-        
-        String hrefRegex = 
-                "<a[^>]*>(.*?)</a>";
-        Pattern pattern = Pattern.compile(hrefRegex);
         
         try{
             
@@ -299,8 +392,14 @@ public class A1 {
 
             //System.out.println(links.size());
             for (Element link : links) {
+                edgeList[i] = link.text();
                //System.out.println("link.attr(\"abs:href\") : " + link.attr("abs:href"));
-               linksList.add(link.attr("abs:href"));
+                if (link.text().contains("www.wikipedia.com")){
+                   linksList.add(link.attr("abs:href"));
+                }
+            }
+            for (int x=links.size();i < edgeList.length;i++){
+                edgeList[x] = null;                             // empty the rest of array
             }
 
             addListToFile(urlFile, linksList);
@@ -453,6 +552,7 @@ public class A1 {
             
             
             while(splitCounter < splitInput.length){
+                System.out.println("urlToMap Word Loop");
                 tempWord = splitInput[splitCounter];
                 tempWord = tempWord.replaceAll("\\p{Punct}",""); 
                 int l = map.get(tempWord);
@@ -786,7 +886,7 @@ public class A1 {
         String tempWord;
         boolean needsAdd;
         CustomBTree tree = new CustomBTree(url,urlNum);
-        tree.category = (String) map.getCategory();
+        //tree.category = (String) map.getCategory();
         
         for (int i = 0; i < map.words.size(); i++) {
            // tempWord =  (String) map.words[i];
@@ -817,6 +917,14 @@ public class A1 {
         CustomHashMap educationMap= new CustomHashMap();
         CustomHashMap gamingMap = new CustomHashMap();
         
+        CustomBTree sportsTree;
+        CustomBTree weatherTree;
+        CustomBTree newsTree;
+        CustomBTree bookTree;
+        CustomBTree businessTree;
+        CustomBTree educationTree;
+        CustomBTree gamingTree;
+        
         sportsMap = urlToMap("https://www.espn.com/","sports.txt", "sports");
         weatherMap = urlToMap("https://www.weather.com/","weather.txt", "weather");
         newsMap = urlToMap("https://news.google.com/","news.txt","news");
@@ -825,6 +933,14 @@ public class A1 {
 	educationMap = urlToMap("http://www.oswego.edu/","education.txt","education");
         gamingMap = urlToMap("https://www.pcgamer.com/","gaming.txt","gaming");
         
+        sportsTree = mapToTree(sportsMap,sportsMap.getUrl().toString(),1000,1000);
+        weatherTree = mapToTree(weatherMap,weatherMap.getUrl().toString(),1001,1001);
+        newsTree = mapToTree(newsMap,newsMap.getUrl().toString(),1002,1000);
+        bookTree = mapToTree(bookMap,bookMap.getUrl().toString(),1003,1000);
+        businessTree = mapToTree(businessMap,businessMap.getUrl().toString(),1004,1000);
+        educationTree = mapToTree(educationMap,educationMap.getUrl().toString(),1005,1000);
+        gamingTree = mapToTree(gamingMap,gamingMap.getUrl().toString(),1006,1000);
+        
         categoryList.add(sportsMap);
         categoryList.add(weatherMap);
         categoryList.add(newsMap);
@@ -832,24 +948,34 @@ public class A1 {
         categoryList.add(businessMap);
         categoryList.add(educationMap);
         categoryList.add(gamingMap);
+        
+        categoryTreeList.add(sportsTree);
+        categoryTreeList.add(weatherTree);
+        categoryTreeList.add(newsTree);
+        categoryTreeList.add(bookTree);
+        categoryTreeList.add(businessTree);
+        categoryTreeList.add(educationTree);
+        categoryTreeList.add(gamingTree);
+        
     }   
     
 
     
-    public static void getCategory(CustomHashMap testMap) throws IOException {
+    public static void getCategory(CustomBTree testTree) throws IOException {
         
         ArrayList<String> wordList = readWordsToList("words.txt");
         //ArrayList<String> wordList = corpus.getWords();
         
         List<Integer> similarity = new ArrayList<Integer>();
-        List<Integer> top5;
+        List<String> top5;
         
         int sensitivity = 1;            // 1->3 3 = most sensitive
         int closest = 0;
 
         for(int i = 0; i < categoryList.size();i++){
             System.out.println("InCat");
-            similarity.add(compareMaps(testMap,categoryList.get(i),wordList,sensitivity)); 
+            similarity.add(compareTrees(testTree,categoryTreeList.get(i),sensitivity)); 
+            //similarity.add(compareMaps(testMap,categoryList.get(i),wordList,sensitivity)); 
             if (Collections.max(similarity) > similarity.get(closest)){
                 closest = i;
             }
@@ -857,39 +983,43 @@ public class A1 {
         String category = categoryList.get(closest).getCategory();
         //GUI.setText("f");
         
-        testMap.category = category;
-        top5 = setTop5(similarity);
+        testTree.category = category;
+        top5 = setTop5(category);
         
         GUI.setCategory(category);
-        for (int i=0;i < 5; i++){
+      /*  for (int i=0;i < 5; i++){
             try{ 
-                String tempString = categoryList.get(similarity.get(top5.get(i))).getCategory();
-                GUI.setArea(tempString);
+                //String tempString = categoryList.get(similarity.get(top5.get(i))).getCategory();
+                GUI.setArea(top5.get(i));
             } catch(Exception e){
                 e.printStackTrace();
             }
-        }
+        }*/
         
         //
     }
     
-    public static List<Integer> setTop5(List<Integer> list){     // Do this so i keep the sort seperate
-        
+    public static List<String> setTop5(String category) throws IOException{     // Do this so i keep the sort seperate
+        String fileName = category + ".txt";
+        ArrayList<String> list = readWordsToList(fileName);
         Collections.sort(list);
-        List<Integer> top5 = new ArrayList<Integer>(list.subList(list.size() -5, list.size()));
+        List<String> top5 = new ArrayList<>(list.subList(list.size() -5, list.size()));
+        
         for (int i=0;i < 5; i++){
-            GUI.setArea(top5.get(i).toString());
+            GUI.setArea(top5.get(i));
         }
             return top5;
             
     }
     
-    public static int compareTrees(CustomBTree tree1, CustomBTree tree2, int sensitivity){
+    public static int compareTrees(CustomBTree tree1, CustomBTree tree2, int sensitivity) throws IOException{
         
         //ArrayList<String> words = corpus.getWords()
         ArrayList<String> words = smallWordList;
         int counter = 0;
         int similarity = 0;
+        Random random = new Random();
+        int ra = random.nextInt();
         Double map1TF = 0.0;
         Double map2TF = 0.0;
         
@@ -904,18 +1034,20 @@ public class A1 {
             
             //wordCountMap1 = tree1.get(words.get(counter));
             Word findWord1 = tree1.getRoot().search(words.get(counter));
+         //   System.out.println(findWord1.getWord());
             if (findWord1 != null){
-            map1TF = findWord1.getTf();
+                map1TF = findWord1.getTf();
            // if(wordCountMap1 != null){
            // map1TF = wordCountMap1.doubleValue() / tree1.getSizeOfMap();
              //   System.out.print("\n" + words.get(counter) + " in tree1 : " + wordCountMap1.longValue());
-                System.out.print("  |   TF : " + map1TF);
+                System.out.print(findWord1.getWord() + "  |   TF : " + map1TF);
             }
            // }
             
           //  wordCountMap2 = map2.get(words.get(counter));
          
             Word findWord2 = tree2.getRoot().search(words.get(counter));
+          //  System.out.println(findWord2.getWord());
             if (findWord2 != null){
                 map2TF = findWord2.getTf();
            // if(wordCountMap2 != null){
@@ -924,7 +1056,7 @@ public class A1 {
                 System.out.print("  |   TF : " + map2TF);
            // }
               }
-            if (map1TF != 0 && map2TF != 0){
+            //if (map1TF != 0 && map2TF != 0){
            
                 switch (sensitivity) {
                     case(1):
@@ -940,8 +1072,32 @@ public class A1 {
                             similarity++;           // INCREMENT IF WITHIN RANGE
                         }     
                }
+           //}
+           if (findWord2 != null && findWord1 != null){
+            if (map1TF > map2TF){
+                 if (mostSimilarKey.isEmpty()){
+                mostSimilarKey.put(findWord1.getWord(),map1TF-map2TF);
+                simKey = findWord1.getWord();
+            } else
+                if ((map1TF - map2TF) < mostSimilarKey.get(simKey)){
+                   // mostSimilarKey = new HashMap<>();
+                    mostSimilarKey.keySet().clear();
+                    mostSimilarKey.put(findWord1.getWord(),map1TF-map2TF);
+                    simKey = findWord1.getWord();
+                }
+            } else if (map2TF > map1TF){
+                 if (mostSimilarKey.isEmpty()){
+                mostSimilarKey.put(findWord2.getWord(),map2TF-map1TF);
+                simKey = findWord2.getWord();
+            } else
+                if ((map2TF - map1TF) < mostSimilarKey.get(simKey)){
+                   // mostSimilarKey = new HashMap<>();
+                    mostSimilarKey.keySet().clear();
+                    mostSimilarKey.put(findWord1.getWord(),map2TF-map1TF);
+                    simKey = findWord1.getWord();
+                }
+            }
            }
-              
                    /*
             if (sensitivity == 1){
                 if ((map1TF > (map2TF - .005)) && (map1TF < (map2TF + .005))){
@@ -962,28 +1118,124 @@ public class A1 {
             counter++;
             //compareMap.putIfAbsent(words.get(counter).toLowerCase(), map1TF);
         }
-        return similarity;
+        
+        return similarity / ra ;
     }
+   
+        
+    public static void dijkstra(){
+        
+            int[] preD = new int[5];
+            int min = 999, nextNode = 0; // min holds the minimum value, nextNode holds the value for the next node.
+          //  scan = new Scanner(System.in); 
+            int[] distance = new int[5]; // the distance matrix
+            int[][] matrix = new int[5][5]; // the actual matrix
+            int[] visited = new int[5]; // the visited array
+
+            System.out.println("Enter the cost matrix"); 
+
+            for(int i = 0; i < distance.length; i++){
+
+                    visited[i] = 0; //initialize visited array to zeros
+
+                    preD[i] = 0;
+
+                    for(int j = 0; j < distance.length; j++){
+
+                          //  matrix[i][j] = scan.nextInt(); //fill the matrix
+
+                            if(matrix[i][j]==0){
+
+                                    matrix[i][j] = 999; // make the zeros as 999
+
+                            }
+
+                    }
+
+            }
+
+            distance = matrix[0]; //initialize the distance array
+            visited[0] = 1; //set the source node as visited
+            distance[0] = 0; //set the distance from source to source to zero which is the starting point
+
+            for(int counter = 0; counter < 5; counter++){
+
+                    min = 999;
+
+                    for(int i = 0; i < 5; i++){
+
+                            if(min > distance[i] && visited[i]!=1){
+
+                                    min = distance[i];
+                                    nextNode = i;
+
+                            }
+
+                    }
+
+                    visited[nextNode] = 1;
+
+                    for(int i = 0; i < 5; i++){
+
+                            if(visited[i]!=1){
+
+                                    if(min+matrix[nextNode][i] < distance[i]){
+
+                                            distance[i] = min+matrix[nextNode][i];
+                                            preD[i] = nextNode;
+
+                                    }
+
+                            }
+
+                    }
+
+            }
+
+            for(int i = 0; i < 5; i++){
+
+                    System.out.print("|" + distance[i]);
+
+            }
+            System.out.println("|");
+
+            int j;
+            for(int i = 0; i < 5; i++){
+
+                    if(i!=0){
+
+                            System.out.print("Path = " + i);
+                            j = i;
+                            do{
+
+                                    j=preD[j];
+                                    System.out.print(" <- " + j);
+
+                            }while(j!=0);
+
+                    }
+
+                    System.out.println();
+
+            }
+
+    }	
+	
+
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    public static void main(String input) throws Exception {
+        public static void main(String input) throws Exception {
         
         smallWordList = readWordsToList("words.txt");
+        
+        urlFiles[0] = "url.txt";
+        urlFiles[1] = "books.txt";
+        urlFiles[2] = "business.txt";
+        urlFiles[3] = "education.txt";
+        urlFiles[4] = "gaming.txt";
+        urlFiles[5] = "news.txt";
+        urlFiles[6] = "weather.txt";
         
         int pageNumber = 0;
         int closest = 0;
@@ -995,7 +1247,7 @@ public class A1 {
         String mostSimilarLink = "IDK YET SORRY";
         
         System.out.println("try and make category");
-        /**/ makeCategory();
+       // /**/ makeCategory();
         
         urlToFile(inputUrl,urlFile);
         
@@ -1011,8 +1263,18 @@ public class A1 {
          
         inputMap = urlToMap(inputUrl,urlFile);
         
-        List<String> urlList = readFile(urlFile);
-        List<CustomHashMap<String,Integer>> listOfMaps = new ArrayList<>();
+        urlList = readFile(urlFile);
+        
+        for (int i = 0; i < urlFiles.length - 1 ;i++){                              // Add different category url pages
+            if (urlFiles[i] != null) {
+                System.out.println("HERE : urlFiles[i] : " + urlFiles[i]);
+                urlList.addAll(readFile(urlFiles[i]));
+            }
+            
+        }
+        for (int i = 0; i < urlList.size() - 1;i++){
+            System.out.println("url : " + urlList.get(i));
+        }
         
         int numberOfPages = listOfMaps.size();
         
@@ -1020,25 +1282,31 @@ public class A1 {
         
         CustomBTree inputTree = mapToTree(inputMap,inputUrl,0,numberOfPages);
         
-        getCategory(inputMap);
+        //getCategory(inputTree);
         
-        while (pageNumber < 5){
+        
+        try {
+            while (pageNumber < 10){
         //while (pageNumber < urlList.size()){
-            System.out.println(urlList.get(pageNumber));
-            
+        
+            System.out.println("***************");
+            System.out.println(PURPLE+"***************");
+            System.out.println(RED + "Page Number: " + pageNumber);
+            System.out.println(RED + "Page Number: " + pageNumber);
+            System.out.println(PURPLE+"***************");       
+           /* for (int i=0; i<1000; i++){ // JUST SO I CAN SEE 
+                System.out.println("Size= " + urlList.size()); 
+                System.out.println(urlList.get(pageNumber));
+            }*/
            
             tempMap = urlToMap(urlList.get(pageNumber),urlFile);
             
             //getCategory(tempMap);
-            
+            GUI.setOutput("Create Tree #" + pageNumber);
             CustomBTree tempTree = mapToTree(tempMap,urlList.get(pageNumber),pageNumber+1,numberOfPages);
             
-            //urlToTree(urlList.get(pageNumber),pageNumber+1,numberOfPages);
             
-            similarity.add(pageNumber, compareTrees(inputTree,tempTree,sensitivity));
-            //similarity.add(pageNumber, compareTrees(inputTree,tempTree,wordList,sensitivity));
-            
-            //similarity.add(pageNumber, compareMaps(inputMap,tempMap,wordList,sensitivity));
+          /*  similarity.add(pageNumber, compareTrees(inputTree,tempTree,sensitivity));
             System.out.println("\n\nSimilarity between inputTree & tree @ page # : " + pageNumber + 
                     " = " + similarity.get(pageNumber));
            
@@ -1046,18 +1314,14 @@ public class A1 {
             if (Collections.max(similarity) > similarity.get(closest)){
                 closest = pageNumber;
             }
-           // if(similarity.get(pageNumber) > similarity.get(secondClosest)
-           //         && similarity.get(pageNumber) != closest) {
-           //     secondClosest = pageNumber;
-           // }
-            
+       */
+            listOfTrees.add(tempTree);
             listOfMaps.add(tempMap);
             
-       //    CustomHashMap<Integer, words> map = urlToMap(urlList.get(pageNumber),pageNumber);
-            
+        
             pageNumber++;
         }
-        
+        } catch(Exception e){System.out.println(e);}
         
        /*         
         for (int i = 1; i < similarity.size(); i++) {
@@ -1072,9 +1336,9 @@ public class A1 {
           
         */
        
-        System.out.println("\n\n---------------------------------");
-        System.out.println("|     1st Page # :" + closest
-                + " = " + Collections.max(similarity) + "     |");
+     //   System.out.println("\n\n---------------------------------");
+     //   System.out.println("|     1st Page # :" + closest
+     //           + " = " + Collections.max(similarity) + "     |");
        // System.out.println("|     2nd Page # : " + secondClosest
        //         + " = " + similarity.get(secondClosest)+ "     |");
         
@@ -1089,14 +1353,119 @@ public class A1 {
         //similar / total number of words  * tf5
         
         
-        GUI.setText(urlList.get(closest));
-        getCategory(inputMap);
+  //      GUI.setText(urlList.get(closest));
+        
+    //    GUI.setSimilarKey(simKey);
+    //    getCategory(inputTree);
         // addToFile(urlFile, "test");
         //checkSym(listOfMaps);  // Improved with tfidfOfWord
         //CustomHashMap<String, Integer> map = urlToMap("https://en.wikipedia.org/wiki/Java_ConcurrentMap");
         //CustomHashMap<String, Integer> map2 = urlToMap("https://en.wikipedia.org/wiki/Doug_Lea");
       
+    }
+    
+    
+    public static void run(String input) throws Exception {
         
+        smallWordList = readWordsToList("words.txt");
+        
+        urlFiles[0] = "url.txt";
+        urlFiles[1] = "books.txt";
+        urlFiles[2] = "business.txt";
+        urlFiles[3] = "education.txt";
+        urlFiles[4] = "gaming.txt";
+        urlFiles[5] = "news.txt";
+        urlFiles[6] = "weather.txt";
+        
+        int pageNumber = 0;
+        int closest = 0;
+        List<Integer> similarity = new ArrayList<>();
+        String inputUrl = GUI.getURL();
+        String urlFile = "url.txt";
+         
+        urlList = readFile(urlFile);
+        
+        for (int i = 0; i < urlFiles.length - 1 ;i++){                              // Add different category url pages
+            if (urlFiles[i] != null) {
+                System.out.println("HERE : urlFiles[i] : " + urlFiles[i]);
+                urlList.addAll(readFile(urlFiles[i]));
+            }
+            
+        }
+        for (int i = 0; i < urlList.size() - 1;i++){
+            System.out.println("url : " + urlList.get(i));
+        }
+        
+        
+       // System.out.println("try and make category");
+      //  /**/ makeCategory();
+        
+        //urlToFile(inputUrl,urlFile);
+        
+        System.out.println("Hi");
+        
+        int sensitivity = 1;            // 1->3 3 = most sensitive
+        
+        
+        CustomHashMap<String, Integer> inputMap;
+        CustomHashMap<String, Integer> tempMap;
+         
+        inputMap = urlToMap(inputUrl,urlFile);
+        
+        int numberOfPages = listOfMaps.size();
+        
+        //System.out.println(inputUrl);
+        
+        CustomBTree inputTree = mapToTree(inputMap,inputUrl,0,numberOfPages);
+        
+        GUI.setOutput("Getting Category of Input");
+        //makeCategory();
+        //getCategory(inputTree);
+        
+        
+        //repopulate trees
+        
+        
+        
+        while (pageNumber < 10){
+       // while (pageNumber < urlList.size()){
+       CustomBTree tempTree;
+            if (listOfTrees.size() > pageNumber){
+                tempTree = listOfTrees.get(pageNumber);
+            } else {
+                tempTree = new CustomBTree(pageNumber+1);
+            }
+            
+           
+            listOfTrees.add(tempTree);
+            
+            
+            
+            similarity.add(pageNumber, compareTrees(inputTree,tempTree,sensitivity));
+            
+            GUI.setOutput("Compare w/ Tree #" + pageNumber + " = " + similarity.get(pageNumber));
+            
+            System.out.println("\n\nSimilarity between inputTree & tree @ page # : " + pageNumber + 
+                    " = " + similarity.get(pageNumber));
+           
+            if (Collections.max(similarity) > similarity.get(closest)){
+                closest = pageNumber;
+            }
+            pageNumber++;
+        }
+        
+        
+   
+         
+        System.out.println("\n\n---------------------------------");
+        System.out.println("|     1st Page # :" + closest
+                + " = " + Collections.max(similarity) + "     |");
+        
+        makeCategory();
+        getCategory(inputTree);
+        
+        GUI.setText(urlList.get(closest));
+        GUI.setSimilarKey(simKey);
         
     }
 }
