@@ -8,6 +8,7 @@ package a1;
 
 import a1.a3.Edge;
 import a1.a3.Graph;
+import a1.a3.Node;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -24,6 +25,9 @@ import org.jsoup.select.Elements;
 
 /**
  *
+ * A3 COMMENT CORPUS IN URLTOMAP unCOmMENT FOR A2
+ * 
+ * 
  * @author CJ
  */
 
@@ -47,18 +51,22 @@ public class A1 {
     public static List<CustomHashMap<String,Integer>> wikiMaps = new ArrayList<>();
     public static Integer[][] wikiEdges = new Integer[1000][1000];
     public static String[] edgeList = new String[1000];
+    public static ArrayList<String> wikiList;
+    
+    public static Edge[] edges;
+    public static int edgeCount = 0;
     
     static void findPath(String srcUrl, String dstUrl) throws IOException {
-        Edge[] edges;
+       // Edge[] edges = null;
         Graph graph;
-        
         String urlFile = "wiki.txt";
         String wordsFile = "words.txt";
         
         int sensitivity = 1; // 1-3
         
         ArrayList<String> wordList = readWordsToList(wordsFile);
-        ArrayList<String> wikiList = readFile(urlFile);
+        wikiList = readFile(urlFile);
+        
         List<Integer> similarity = new ArrayList<>();
         
         CustomHashMap<String, Integer> srcMap;                    //  SRC at [0]
@@ -68,45 +76,52 @@ public class A1 {
          
         srcMap = urlToMap(srcUrl,urlFile);
         
+        Node srcNode = new Node(srcUrl);
+        
         for(int i=0;i<edgeList.length && edgeList[i]!= null;i++){
-            wikiEdges[0][i] = edgeList[i];                          // set pointers to connects for src
+            Node dstNode = new Node(edgeList[i]);
+            edges[edgeCount] = new Edge(srcNode,dstNode);    
         }
         
         dstMap = urlToMap(dstUrl,urlFile);
+        srcNode = new Node(srcUrl);
         
         for(int i=0;i<edgeList.length && edgeList[i]!= null;i++){
-            wikiEdges[1][i] = edgeList[i];                          // set pointers to connects for dst
+            Node dstNode = new Node(edgeList[i]);
+            edges[edgeCount] = new Edge(srcNode,dstNode);  
         }
        
         // IF EQUAL // CONNECT BREAK
-        
-        int pageNumber = 0;
+       
         
     // HAVE TO LOOP AND CHECK PAGE VS PAGE NOT JUST SRC VS PAGE HAVE TO CHECK EVERY COMBINATION FOR WEIGHTS
         try {
 
-            while (pageNumber < wikiList.size()){
-
-                tempMap = urlToMap(wikiList.get(pageNumber),urlFile);
-
-                for(int i=0;i<edgeList.length && edgeList[i]!= null;i++){
-                    wikiEdges[pageNumber][i] = edgeList[i];            // set pointers to connects for pages
-                }
+            for (int pageNumber=0;pageNumber < wikiList.size(); pageNumber++){
                 
-                wikiMaps.add(tempMap);
-
-                similarity.add(pageNumber, compareMaps(srcMap,tempMap,wordList,sensitivity));
-                System.out.println("\n\nSimilarity between src & tempMap @ page # : " + pageNumber + 
-                        " = " + similarity.get(pageNumber));
+                srcMap = urlToMap(wikiList.get(pageNumber),urlFile);
+                srcNode = new Node(wikiList.get(pageNumber));
+                wikiMaps.add(srcMap);
                 
+                for(int k=1;k < wikiList.size(); k++){
+                    
+                    dstMap = urlToMap(wikiList.get(k),urlFile);
+                    wikiMaps.add(dstMap);
+
+                    for(int i=0;i<edgeList.length && edgeList[i]!= null;i++){
                         
+                        Node dstNode = new Node(edgeList[i]);
+                        edges[edgeCount] = new Edge(srcNode,dstNode,compareMaps(srcMap,dstMap,wordList,sensitivity));
+                    }
 
-                pageNumber++;
-            }
+                    //edges[edgeCount] = new Edge(,link.text());    
+
+                }
+            }   
         } catch(Exception e){System.out.println(e);}
         
-        //graph = new Graph(edges);
-        //graph.dijkstra();
+        graph = new Graph(edges);
+        graph.dijkstra();
     
     }
     
@@ -371,12 +386,13 @@ public class A1 {
         int splitCounter = 0; 
         String alreadyAdded[] = new String[5000];
         int addedCounter = 0;
-        int i=0;
+        int b=0;
         boolean needsAdd;
         
         String tempWord;
         
         try{
+            GUI.setOutput("Map from" + url);
             
             File input = new File(url);
 
@@ -392,13 +408,16 @@ public class A1 {
 
             //System.out.println(links.size());
             for (Element link : links) {
-                edgeList[i] = link.text();
+                if (wikiList.contains(link)){
+                edgeList[b] = link.text();
+                }
                //System.out.println("link.attr(\"abs:href\") : " + link.attr("abs:href"));
                 if (link.text().contains("www.wikipedia.com")){
                    linksList.add(link.attr("abs:href"));
                 }
+                b++;
             }
-            for (int x=links.size();i < edgeList.length;i++){
+            for (int x=links.size();x < edgeList.length;x++){
                 edgeList[x] = null;                             // empty the rest of array
             }
 
@@ -500,6 +519,9 @@ public class A1 {
         //
         return map;
     }
+        
+        
+        
         // old
     public static CustomHashMap urlToMap(String url,String urlFile) throws IOException{
         CustomHashMap map = new CustomHashMap<>(url);
@@ -508,22 +530,17 @@ public class A1 {
         int linkCounter = 0;
         String alreadyAdded[] = new String[5000];
         int addedCounter = 0;
-        
+        int b=0;
         boolean needsAdd;
         
         
         String tempWord;
         
-        String hrefRegex = 
-                "<a[^>]*>(.*?)</a>";
-        Pattern pattern = Pattern.compile(hrefRegex);
-        
         try{
-            
+            GUI.setOutput("Map from" + url);
             File input = new File(url);
 
-            //Document doc = Jsoup.parse(input, "UTF-8", "http://example.com/");
-
+           
             Document doc = Jsoup.connect(url).get();
             String title = doc.title();
             String body = doc.body().text();
@@ -534,13 +551,23 @@ public class A1 {
 
             System.out.println(links.size());
             for (Element link : links) {
+                if (wikiList.contains(link)){
+                edgeList[b] = link.text();
+                b++;
+                }
                //System.out.println("link.attr(\"abs:href\") : " + link.attr("abs:href"));
-               linksList.add(link.attr("abs:href"));
+                if (link.text().contains("www.wikipedia.com")){
+                   linksList.add(link.attr("abs:href"));
+                }
+                
+            }
+            for (int x=links.size();x < edgeList.length;x++){
+                edgeList[x] = null;                             // empty the rest of array
             }
 
             addListToFile(urlFile, linksList);
 
-            // **
+            /*
               File file = new File(System.getProperty("user.dir") + "//pagefiles//" + title + ".txt");
               FileOutputStream out = new FileOutputStream(
                     System.getProperty("user.dir") + "//pagefiles//" + title + ".txt");
@@ -548,16 +575,17 @@ public class A1 {
             out.close();
             FileWriter fr = new FileWriter(file);
             BufferedWriter  br = new BufferedWriter(fr);
-            // **
+            // **/
             
-            
+            System.out.println("oldurlToMap Word Loop");
             while(splitCounter < splitInput.length){
-                System.out.println("urlToMap Word Loop");
+                
                 tempWord = splitInput[splitCounter];
                 tempWord = tempWord.replaceAll("\\p{Punct}",""); 
                 int l = map.get(tempWord);
                 needsAdd = true;
                 
+                /*
                 if (addedCounter == 0) {
                     
                     corpus.addWord(tempWord);
@@ -586,9 +614,9 @@ public class A1 {
                         System.out.println(tempWord + " word count in corpus : " + corpus.getWordCount(tempWord));
                         addedCounter++;
                         needsAdd = false;
-                    }
-                }
-                
+                    }*/
+                //}
+        
                 
                 /*
                 if (checkForURL(tempWord.toLowerCase(),"words.txt") == false) {
@@ -596,8 +624,8 @@ public class A1 {
                 }
                 */
                 // ***************
-                br.write(tempWord);
-                br.newLine();
+               // br.write(tempWord);
+              //  br.newLine();
                 // ******************
             
                 
@@ -612,7 +640,7 @@ public class A1 {
                 splitCounter++;
             }
             
-            br.close();  // **
+          //  br.close();  // **
       /* 
         while (loopCounter < links.size()){
            
