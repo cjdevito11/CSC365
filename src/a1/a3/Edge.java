@@ -31,7 +31,7 @@ public class Edge {
         this.weight = weight;
     }
     
-      public Edge(Node src, Node dest){
+    public Edge(Node src, Node dest){
         this.src = src;
         this.dest = dest;
         this.weight = 0;
@@ -43,6 +43,8 @@ public class Edge {
         this.weight = weight;
     }
     
+    public void setSrc(Node src){ this.src = src; }
+    public void setDest(Node dest) { this.dest = dest; }
     
     public int getSrcIndex(){ return srcIndex; }
     public int getDestIndex() { return destIndex; }
