@@ -19,11 +19,30 @@ public class Edge {
     
     double weight;
 
+    public Edge(int srcIndex, int destIndex){
+        this.srcIndex = srcIndex;
+        this.destIndex = destIndex;
+        this.weight = 0;
+    }
+        
     public Edge(int srcIndex, int destIndex, double weight){
         this.srcIndex = srcIndex;
         this.destIndex = destIndex;
         this.weight = weight;
     }
+    
+      public Edge(Node src, Node dest){
+        this.src = src;
+        this.dest = dest;
+        this.weight = 0;
+    }
+      
+    public Edge(Node src, Node dest, double weight){
+        this.src = src;
+        this.dest = dest;
+        this.weight = weight;
+    }
+    
     
     public int getSrcIndex(){ return srcIndex; }
     public int getDestIndex() { return destIndex; }
