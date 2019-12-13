@@ -5,6 +5,7 @@
  */
 package a1.a3;
 
+import a1.A1;
 import java.util.ArrayList;
 import a1.a3.Triplet;
 import java.io.*;
@@ -17,7 +18,7 @@ import java.util.*;
 public class Graph {
     private static int EDGE_DISTANCE;
     
-    private Node[] nodes;
+    private Node[] nodes = A1.nodes;
     private Edge[] edges;
     
     private int nodeCount;
@@ -45,35 +46,68 @@ public class Graph {
     
     public Graph(Edge[] edges,int edgeCount){ 
         this.edges = edges;
+        this.edgeCount=edgeCount;
         nodeCount = calcNodeCount(edges);
         nodes = new Node[nodeCount];  
         
         for (int n = 0; n < this.nodeCount; n++) {       // create each node
-            nodes[n] = new Node();
+            //nodes[n] = new Node();
+           // nodes[n] = edges[n].dest;
         }
+        
                                                              //add edges
-        this.edgeCount = edgeCount;
+      
+       /* for (int add=0; add < edgeCount ;add++){
+            ArrayList srcEdges = this.nodes[edges[add].getSrcIndex()].getEdges();
+            ArrayList destEdges = this.nodes[edges[add].getDestIndex()].getEdges();
+            
+            srcEdges.add(edges[add]);
+            destEdges.add(edges[add]);
+            
+            
+        }*/
+    }
+     public Graph(Edge[] edges,int edgeCount, Node[] nodes,int nodeCount){ 
+        this.edges = edges;
+        this.edgeCount=edgeCount;
+        this.nodeCount = nodeCount;
+        this.nodes = nodes;
+        
+                                                             //add edges
+      /*
         for (int add=0; add < edgeCount ;add++){
             ArrayList srcEdges = this.nodes[edges[add].getSrcIndex()].getEdges();
             ArrayList destEdges = this.nodes[edges[add].getDestIndex()].getEdges();
             
             srcEdges.add(edges[add]);
             destEdges.add(edges[add]);
+            
+            
         }
+                                                             */
     }
     
+    void Union(int parent[], int x, int y) { 
+     //   int xset = find(parent, x); 
+       // int yset = find(parent, y); 
+        //parent[xset] = yset; 
+    } 
+     
     public int calcNodeCount(Edge[] edges){
         int nodes = 0;
         
         for (Edge edge : edges) {
-            if (edge.getDestIndex() > nodes){
-                nodes = edge.getDestIndex();
+            if(edge != null){
+                if (edge.getDestIndex() > nodes){
+                    nodes = edge.getDestIndex();
+                }
+                if (edge.getSrcIndex() > nodes) {
+                    nodes = edge.getSrcIndex();
+                }
             }
-            if (edge.getSrcIndex() > nodes) {
-                nodes = edge.getSrcIndex();
-            }
+            nodes++;
         }
-        nodes++;
+        
         return nodes;
 
     }
@@ -121,11 +155,12 @@ public class Graph {
     }
     
     public void output() {
-        String output = "Node Count :" + nodeCount;
+        String output = "\n***********************\n\nNode Count :" + nodeCount;
         output += "\nEdge Count : " + edgeCount;
         
         for(int i=0; i < nodes.length; i++){
-            output += ("\nNode 0 ~~~> " + i + " : " + nodes[i].getTotalDistance());
+            output += ("\nNode " + i + "~~~>  " + nodes[i].getTotalDistance());
+            
         }
         System.out.println(output);
     }
